@@ -1,0 +1,2486 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="설계 꼬리질문">
+<meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15171c" media="(prefers-color-scheme: dark)">
+<title>시스템 설계 꼬리질문</title>
+<style>
+:root{
+  --bg:#f6f6f3; --card:#fff; --text:#1f2328; --muted:#6b7280; --line:#e3e3df;
+  --accent:#2457d6; --accent-weak:#e3ebfd; --ok:#167a3e; --ok-weak:#ddf5e5;
+  --bad:#b42318; --bad-weak:#fde4e1; --mid:#a15c07; --mid-weak:#fdf0d5;
+  --code-bg:#f2f2ef; --box-bg:#fbfbf9;
+  --k-tx:#7c4dcc; --k-read:#2457d6; --k-check:#6b7280; --k-update:#167a3e; --k-call:#c2410c; --k-respond:#0f766e; --k-stop:#6b7280;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15171c; --card:#1d2027; --text:#e7e7e7; --muted:#9aa1ad; --line:#2f343e;
+    --accent:#7aa2ff; --accent-weak:#1f2d4d; --ok:#5fd38d; --ok-weak:#163323;
+    --bad:#ff8a80; --bad-weak:#3d1d1b; --mid:#f5b94a; --mid-weak:#3a2e14;
+    --code-bg:#242832; --box-bg:#1a1d23;
+    --k-tx:#b69cff; --k-read:#7aa2ff; --k-check:#9aa1ad; --k-update:#5fd38d; --k-call:#fb923c; --k-respond:#5eead4; --k-stop:#9aa1ad;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15171c; --card:#1d2027; --text:#e7e7e7; --muted:#9aa1ad; --line:#2f343e;
+  --accent:#7aa2ff; --accent-weak:#1f2d4d; --ok:#5fd38d; --ok-weak:#163323;
+  --bad:#ff8a80; --bad-weak:#3d1d1b; --mid:#f5b94a; --mid-weak:#3a2e14;
+  --code-bg:#242832; --box-bg:#1a1d23;
+  --k-tx:#b69cff; --k-read:#7aa2ff; --k-check:#9aa1ad; --k-update:#5fd38d; --k-call:#fb923c; --k-respond:#5eead4; --k-stop:#9aa1ad;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--text)}
+body{font:15px/1.65 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;-webkit-font-smoothing:antialiased}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.mono,.trace td.mono{font-family:"SF Mono",Menlo,Consolas,"D2Coding",monospace;font-size:12.5px}
+.wrap{max-width:920px;margin:0 auto;padding:16px}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px}
+header.top h1{font-size:16px;margin:0;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp{flex:1}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.pill.bad{color:var(--bad);border-color:var(--bad)}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:8px;padding:3px 9px;font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:none;border:0;padding:3px 10px;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--accent);color:#fff}
+:root[data-theme="dark"] .seg button.on{color:#0d1b3a}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 14px;font-size:14px}
+@media (hover:hover){.btn:hover:not(:disabled){border-color:var(--accent)}}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0d1b3a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary,:root:not([data-theme="light"]) .seg button.on{color:#0d1b3a}}
+.btn.ghost{background:none}
+.btn.sm{padding:4px 10px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+h2{font-size:18px;margin:26px 0 10px}
+h3{font-size:15px;margin:0}
+h3.sub{margin:18px 0 8px;font-size:14px}
+p{margin:6px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.intro p{margin:4px 0}
+.pcard p{margin:6px 0 10px}
+
+/* 단계 */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}
+.step{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--muted)}
+.steps.big .step{font-size:13px;padding:5px 12px}
+.step.solved{border-color:var(--ok);color:var(--ok);background:var(--ok-weak)}
+.step.gaveup{border-color:var(--mid);color:var(--mid);background:var(--mid-weak)}
+.step.open{color:var(--text)}
+.step.locked{opacity:.5}
+.step.cur{outline:2px solid var(--accent);outline-offset:1px}
+details.ctx{margin-bottom:12px;color:var(--muted)}
+details.ctx summary{cursor:pointer;font-size:13px}
+details.ctx p{font-size:14px}
+
+/* 문제 카드 */
+.interviewer{display:flex;gap:10px;align-items:baseline;background:var(--accent-weak);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.interviewer .who{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
+.ask p{margin:6px 0}
+.meta{margin-top:10px}
+ul.rules{margin:0;padding-left:20px}
+ul.rules li{margin:2px 0}
+.tests{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+.test{border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--box-bg)}
+.test b{font-size:13.5px;margin-right:4px}
+.tid{font-size:11px;color:var(--muted);margin-right:6px;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:11px;padding:0 7px;border-radius:999px;background:var(--mid-weak);color:var(--mid);margin-left:4px;white-space:nowrap}
+details.help{margin:12px 0 0;font-size:13.5px}
+details.help summary{cursor:pointer;color:var(--accent)}
+details.help ul{padding-left:20px;margin:6px 0}
+details.help li{margin:3px 0}
+
+/* 블록 편집기 */
+.editor{border:1px dashed var(--line);border-radius:12px;padding:10px;background:var(--box-bg)}
+.blist{display:flex;flex-direction:column;gap:6px}
+.blk{display:flex;align-items:flex-start;gap:6px;border:1px solid var(--line);border-left:4px solid var(--k-check);border-radius:8px;background:var(--card);padding:6px 8px}
+.blk .body{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex:1;min-width:0}
+.blk .body b{font-size:13.5px;margin-right:2px}
+.blk .lbl{font-size:12.5px;color:var(--muted)}
+.blk .sep{flex-basis:100%;height:0}
+.blk .muted{font-size:12px}
+.k-begin,.k-commit{border-left-color:var(--k-tx)!important}
+.k-read{border-left-color:var(--k-read)!important}
+.k-check{border-left-color:var(--k-check)!important}
+.k-update{border-left-color:var(--k-update)!important}
+.k-call{border-left-color:var(--k-call)!important}
+.k-respond{border-left-color:var(--k-respond)!important}
+.k-stop{border-left-color:var(--k-stop)!important}
+.tools{display:flex;gap:2px;flex-shrink:0}
+.ib{background:none;border:1px solid transparent;border-radius:6px;padding:0 6px;font-size:13px;color:var(--muted);line-height:22px}
+@media (hover:hover){.ib:hover:not(:disabled){border-color:var(--line);color:var(--text)}.ib.del:hover{color:var(--bad)}}
+.ib:disabled{opacity:.3}
+select{border:1px solid var(--line);border-radius:6px;background:var(--card);padding:2px 4px;font-size:13px;max-width:100%}
+select.need{border-color:var(--bad);color:var(--bad)}
+select.narrow{min-width:40px}
+.branches{margin:6px 0 2px 14px;padding-left:10px;border-left:2px solid var(--k-call);display:flex;flex-direction:column;gap:8px}
+.brlabel{font-size:12.5px;font-weight:700;color:var(--k-call);margin-bottom:4px}
+.addrow{display:flex;align-items:center;gap:8px}
+select.adder{border-style:dashed;color:var(--muted);background:none}
+.actions{margin-top:14px}
+.msg{margin-top:8px}
+.warn{background:var(--bad-weak);color:var(--bad);border-radius:8px;padding:8px 10px;font-size:13.5px}
+
+/* 결과 */
+.result{margin-top:12px}
+.score{padding:8px 12px;border-radius:10px;margin-bottom:8px}
+.score.ok{background:var(--ok-weak);color:var(--ok)}
+.score.bad{background:var(--bad-weak);color:var(--bad)}
+.score .muted{color:var(--muted)}
+.tres{border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-bottom:6px}
+.tres.fail{border-color:var(--bad)}
+.tres summary{cursor:pointer;list-style:none}
+.tres summary::-webkit-details-marker{display:none}
+.thead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mark{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.mark.ok{background:var(--ok-weak);color:var(--ok)}
+.mark.bad{background:var(--bad-weak);color:var(--bad)}
+ul.viol{margin:6px 0;padding-left:20px;color:var(--bad);font-size:13.5px}
+.cxlabel{margin:6px 0 4px}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%}
+table.trace{font-size:13px;min-width:560px}
+table.trace th,table.trace td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+table.trace th{font-size:12px;color:var(--muted);font-weight:600}
+table.trace td.n{color:var(--muted);width:28px;font-variant-numeric:tabular-nums}
+table.trace td.who{white-space:nowrap;font-weight:600}
+table.trace tr.fault td{background:var(--mid-weak)}
+table.trace tr.crash td,table.trace tr.err td{background:var(--bad-weak)}
+table.trace tr.same td{color:var(--muted);font-style:italic}
+table.trace tfoot td{font-weight:700;border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* 정량, 선택 */
+.flowtext{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--box-bg);font-size:13.5px}
+.ft{border-left:3px solid var(--k-check);padding:1px 8px;margin:2px 0}
+.ft.br{border-left-color:transparent;color:var(--k-call);font-weight:700;font-size:12.5px}
+.ft.d1{margin-left:16px}.ft.d2{margin-left:32px}.ft.d3{margin-left:48px}.ft.d4{margin-left:64px}
+table.givens td{border-bottom:1px solid var(--line);padding:4px 6px;font-size:13.5px}
+.qs{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.q{border-top:1px solid var(--line);padding-top:10px}
+.qt{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+.numin{width:130px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--card);text-align:right}
+.opts{display:flex;flex-direction:column;gap:4px}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:5px 8px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:14px}
+.opt input{margin-top:5px}
+.opt.right{border-color:var(--ok);background:var(--ok-weak)}
+.explain{margin-top:6px;padding:8px 10px;border-radius:8px;background:var(--box-bg);border:1px solid var(--line)}
+.essay textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);resize:vertical;margin-bottom:6px}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+.cmp>div{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--box-bg)}
+
+/* 힌트, 해설 */
+.hints .hint{display:flex;gap:8px;margin:8px 0;font-size:14px}
+.hn{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--accent-weak);color:var(--accent);font-size:12px;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.hints .row{margin-top:8px}
+.answer ul{padding-left:20px}
+.answer li{margin:4px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px}
+.speak{background:var(--accent-weak);border-radius:10px;padding:10px 12px}
+.next{margin:4px 0 30px}
+
+/* 통계 */
+table.stats th,table.stats td{border-bottom:1px solid var(--line);padding:6px;text-align:left;font-size:13.5px}
+table.stats th{font-size:12px;color:var(--muted);font-weight:600}
+.barcell{width:35%}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.verdict{white-space:nowrap}
+.v-체화{color:var(--ok)}.v-약함{color:var(--bad)}.v-익히는{color:var(--mid)}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:10px;font-size:13.5px;z-index:20;max-width:calc(100% - 32px)}
+
+@media (max-width:640px){
+  .wrap{padding:12px 16px}
+  .two,.cmp{grid-template-columns:1fr}
+  .tests{grid-template-columns:1fr}
+  .blk{flex-direction:column}
+  .tools{align-self:flex-end}
+  .branches{margin-left:4px;padding-left:8px}
+  .seg button{padding:3px 8px}
+}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript>자바스크립트가 필요하다.</noscript>
+<script>
+// ---- src/engine.js
+/* 채점 엔진
+ * 블록 흐름(설계)을 작은 상태 기계로 돌린다. 행위자 실행 순서, 서버 다운 지점, 외부 호출 결과를
+ * 모두 펼쳐 보고(BFS) 규칙 위반을 찾는다. BFS라서 처음 찾은 위반이 가장 짧은 반례다.
+ *
+ * 세계 모델 (MySQL InnoDB, REPEATABLE READ 기준으로 단순화)
+ * - DB: 행 하나(problem.row). 커밋된 값 + 트랜잭션별 쓰기 버퍼.
+ * - 일반 읽기: 트랜잭션 안이면 첫 읽기 시점 스냅샷(내가 쓴 값은 보임), 밖이면 최신 커밋 값.
+ * - FOR UPDATE 읽기, 변경: 행 잠금(X). 다른 트랜잭션이 쥐고 있으면 대기. 최신 커밋 값을 본다.
+ *   트랜잭션 밖의 FOR UPDATE는 문장이 끝나면 잠금이 풀린다.
+ * - 외부(PG): 주문번호별 결제 상태. 타임아웃은 "실제로 반영됨/안 됨" 두 갈래로 펼친다.
+ * - 서버 다운: 열린 트랜잭션 롤백, 응답 없음.
+ * - 복구 작업: 요청이 모두 끝난(또는 죽은) 뒤 RUNS번 돈다.
+ */
+(function (root) {
+  'use strict';
+  const SD = (root.SD = root.SD || {});
+  SD.problems = SD.problems || [];
+
+  const BRANCHES = {
+    approve: ['ok', 'declined', 'timeout'],
+    query: ['approved', 'none', 'timeout'],
+    cancel: ['ok', 'timeout'],
+  };
+  const RUNS = 3;
+  const LIMIT = 250000;
+  const ERR = { err: true };
+
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+
+  // ---------- 컴파일: 블록 트리 → 점프가 있는 명령 배열 ----------
+  function compile(flow) {
+    const code = [];
+    const emit = (list) => {
+      for (const b of list || []) {
+        if (b.t === 'call') {
+          const ins = { t: 'call', op: b.op, key: b.key, id: b.id, targets: {} };
+          code.push(ins);
+          const jumps = [];
+          for (const name of BRANCHES[b.op]) {
+            ins.targets[name] = code.length;
+            emit(b.br && b.br[name]);
+            const j = { t: 'jmp', to: -1 };
+            jumps.push(j);
+            code.push(j);
+          }
+          for (const j of jumps) j.to = code.length;
+        } else {
+          const ins = Object.assign({}, b);
+          delete ins.br;
+          code.push(ins);
+        }
+      }
+    };
+    emit(flow);
+    code.push({ t: 'end' });
+    return code;
+  }
+
+  const skipJmp = (code, pc) => {
+    while (code[pc] && code[pc].t === 'jmp') pc = code[pc].to;
+    return pc;
+  };
+
+  // ---------- 표시 ----------
+  function fmtRow(P, v) {
+    if (!v) return '-';
+    return Object.keys(P.fields)
+      .map((f) => (v[f] == null ? '-' : v[f]))
+      .join('/');
+  }
+  function fmtPg(pg) {
+    const ks = Object.keys(pg);
+    if (!ks.length) return '-';
+    return ks.map((k) => `${k}:${pg[k].st === 'APPROVED' ? '승인' : '취소'}`).join(', ');
+  }
+  function valLabel(P, field, v, role) {
+    if (v === 'ME') return role === 'rec' ? '읽은 주인' : '나';
+    if (v == null) return '없음';
+    return (P.valueLabels && P.valueLabels[v]) || v;
+  }
+  const OP_LABEL = { approve: 'PG 승인', query: 'PG 조회', cancel: 'PG 취소' };
+  const VIS_LABEL = {
+    approve: { ok: '승인', declined: '거절', timeout: '타임아웃' },
+    query: { approved: '승인 기록 있음', none: '기록 없음', timeout: '타임아웃' },
+    cancel: { ok: '취소됨', timeout: '타임아웃' },
+  };
+
+  // ---------- 상태 ----------
+  function initState(P, level, test) {
+    const db = {};
+    db[P.row] = clone((test.rows && test.rows[P.row]) || P.rows[P.row]);
+    const actors = test.actors.map((x) => {
+      const name = typeof x === 'string' ? x : x.name;
+      const user = typeof x === 'string' ? x : x.user;
+      return { name, user, role: 'req', pc: 0, st: 'run', resp: null, tx: null, seat: null, t: 0, c: 0 };
+    });
+    if (level.flows.includes('rec') && !test.noRec) {
+      actors.push({ name: '복구', user: null, role: 'rec', pc: 0, st: 'wait', run: 0, tx: null, seat: null, t: 0, c: 0 });
+    }
+    return { db, locks: {}, pg: {}, seq: 0, budget: test.budget || 0, actors, err: null };
+  }
+
+  const label = (a) => (a.role === 'rec' ? `복구 ${a.run}회차` : a.name);
+  const heldByOther = (s, P, i) => s.locks[P.row] != null && s.locks[P.row] !== i;
+
+  function releaseLocks(s, i) {
+    for (const k of Object.keys(s.locks)) if (s.locks[k] === i) delete s.locks[k];
+  }
+  function commitTx(s, P, i) {
+    const a = s.actors[i];
+    if (a.tx && a.tx.w) s.db[P.row] = a.tx.w;
+    a.tx = null;
+    releaseLocks(s, i);
+  }
+  function rollbackTx(s, i) {
+    s.actors[i].tx = null;
+    releaseLocks(s, i);
+  }
+  function endRun(s, i) {
+    const a = s.actors[i];
+    a.tx = null;
+    a.seat = null;
+    if (a.run < RUNS) {
+      a.run += 1;
+      a.pc = 0;
+    } else {
+      a.st = 'done';
+    }
+  }
+  function settle(s) {
+    const reqDone = s.actors.every((a) => a.role === 'rec' || a.st !== 'run');
+    if (!reqDone) return;
+    const r = s.actors.find((a) => a.role === 'rec');
+    if (r && r.st === 'wait') {
+      r.st = 'run';
+      r.run = 1;
+      r.pc = 0;
+    }
+  }
+
+  function resolve(v, a) {
+    if (v === 'ME') {
+      if (a.role === 'req') return a.user;
+      return a.seat ? a.seat.holder : ERR;
+    }
+    return v;
+  }
+
+  // ---------- 한 걸음 ----------
+  function spend(ctx, a, ms, conn) {
+    if (!ctx.lat) return 0;
+    a.t += ms;
+    if (conn) a.c += ms;
+    return ms;
+  }
+
+  function fail(s, ctx, i, ev) {
+    const a = s.actors[i];
+    if (a.tx) {
+      rollbackTx(s, i);
+      spend(ctx, a, ctx.lat ? ctx.lat.rollback : 0, true);
+      ev.text += ' (롤백)';
+    }
+    if (a.role === 'req') {
+      a.resp = 'fail';
+      a.st = 'done';
+      ev.text += ' → 실패 응답';
+    } else {
+      ev.text += ' → 이번 회차 종료';
+      endRun(s, i);
+    }
+  }
+
+  function flowError(s, i, msg, ev) {
+    s.err = `${label(s.actors[i])}: ${msg}`;
+    ev.text = `흐름 오류: ${msg}`;
+    ev.error = true;
+  }
+
+  function step(s0, i, ctx) {
+    const P = ctx.P;
+    const a0 = s0.actors[i];
+    const code = ctx.code[a0.role];
+    const ins = code[a0.pc];
+    const needsLock = ins.t === 'update' || (ins.t === 'read' && ins.lock === 'update');
+    if (needsLock && heldByOther(s0, P, i)) return null; // 잠금 대기
+    if (ins.t === 'call') return callStep(s0, i, ctx, ins);
+
+    const s = clone(s0);
+    const a = s.actors[i];
+    const ev = { who: label(a), id: ins.id, text: '', ms: 0, conn: false };
+    const txBefore = !!a.tx;
+    const lat = ctx.lat || {};
+    const R = P.row;
+
+    switch (ins.t) {
+      case 'begin':
+        if (a.tx) {
+          flowError(s, i, '이미 열린 트랜잭션 안에서 다시 트랜잭션을 시작했다', ev);
+          break;
+        }
+        a.tx = { w: null, snap: null };
+        ev.text = '트랜잭션 시작';
+        ev.ms = spend(ctx, a, lat.begin || 0, true);
+        ev.conn = true;
+        a.pc++;
+        break;
+      case 'commit':
+        if (!a.tx) {
+          flowError(s, i, '열린 트랜잭션이 없는데 커밋했다', ev);
+          break;
+        }
+        commitTx(s, P, i);
+        ev.text = '커밋';
+        ev.ms = spend(ctx, a, lat.commit || 0, true);
+        ev.conn = true;
+        a.pc++;
+        break;
+      case 'read': {
+        let v;
+        if (ins.lock === 'update') {
+          if (a.tx) {
+            s.locks[R] = i;
+            v = a.tx.w || s.db[R];
+            ev.text = '좌석 읽기 FOR UPDATE (잠금 획득)';
+          } else {
+            v = s.db[R];
+            ev.text = '좌석 읽기 FOR UPDATE (트랜잭션 밖이라 문장이 끝나면 잠금 해제)';
+          }
+        } else if (a.tx) {
+          if (a.tx.w) v = a.tx.w;
+          else {
+            if (!a.tx.snap) a.tx.snap = clone(s.db[R]);
+            v = a.tx.snap;
+          }
+          ev.text = '좌석 읽기 (일반, 트랜잭션 스냅샷)';
+        } else {
+          v = s.db[R];
+          ev.text = '좌석 읽기 (일반)';
+        }
+        a.seat = clone(v);
+        ev.text += ` → ${fmtRow(P, v)}`;
+        ev.ms = spend(ctx, a, lat.db || 0, true);
+        ev.conn = true;
+        a.pc++;
+        break;
+      }
+      case 'check': {
+        if (!a.seat) {
+          flowError(s, i, '좌석을 읽기 전에 확인했다', ev);
+          break;
+        }
+        const want = resolve(ins.value, a);
+        if (want === ERR) {
+          flowError(s, i, '읽은 주인이 없는데 주인과 비교했다', ev);
+          break;
+        }
+        const actual = a.seat[ins.field];
+        const pass = ins.op === 'ne' ? actual !== want : actual === want;
+        ev.text = `확인: ${P.fields[ins.field].label} ${ins.op === 'ne' ? '≠' : '='} ${valLabel(P, ins.field, ins.value, a.role)} → ${pass ? '통과' : '불일치'}`;
+        ev.ms = spend(ctx, a, 0, txBefore);
+        ev.conn = txBefore;
+        if (pass) a.pc++;
+        else fail(s, ctx, i, ev);
+        break;
+      }
+      case 'update': {
+        const cur = a.tx && a.tx.w ? a.tx.w : s.db[R];
+        let match = true;
+        for (const f of Object.keys(ins.where || {})) {
+          const w = ins.where[f];
+          if (w === undefined || w === '*') continue;
+          const want = resolve(w, a);
+          if (want === ERR) {
+            flowError(s, i, '좌석을 읽기 전에 "읽은 주인"을 조건으로 썼다', ev);
+            match = null;
+            break;
+          }
+          if (cur[f] !== want) match = false;
+        }
+        if (match === null) break;
+        ev.ms = spend(ctx, a, lat.db || 0, true);
+        ev.conn = true;
+        if (!match) {
+          ev.text = `좌석 변경: 조건 불일치로 0건 (현재 ${fmtRow(P, cur)})`;
+          fail(s, ctx, i, ev);
+          break;
+        }
+        const nv = Object.assign({}, cur);
+        for (const f of Object.keys(ins.set || {})) {
+          const v = ins.set[f];
+          if (v === undefined || v === '*') continue;
+          const r = resolve(v, a);
+          if (r === ERR) {
+            flowError(s, i, '좌석을 읽기 전에 "읽은 주인"을 값으로 썼다', ev);
+            match = null;
+            break;
+          }
+          nv[f] = r;
+        }
+        if (match === null) break;
+        if (a.tx) {
+          a.tx.w = nv;
+          s.locks[R] = i;
+          ev.text = `좌석 변경 → ${fmtRow(P, nv)} (커밋 전)`;
+        } else {
+          s.db[R] = nv;
+          ev.text = `좌석 변경 → ${fmtRow(P, nv)} (바로 커밋)`;
+        }
+        a.pc++;
+        break;
+      }
+      case 'respond': {
+        if (a.role !== 'req') {
+          flowError(s, i, '복구 흐름에서 응답했다', ev);
+          break;
+        }
+        const name = { ok: '성공 응답', fail: '실패 응답', pending: '처리 중 응답' }[ins.kind];
+        if (ins.kind === 'fail') {
+          if (a.tx) {
+            rollbackTx(s, i);
+            ev.ms = spend(ctx, a, lat.rollback || 0, true);
+            ev.conn = true;
+            ev.text = `${name} (열린 트랜잭션 롤백)`;
+          } else ev.text = name;
+        } else if (a.tx) {
+          commitTx(s, P, i);
+          ev.ms = spend(ctx, a, lat.commit || 0, true);
+          ev.conn = true;
+          ev.text = `${name} (열린 트랜잭션을 이때 커밋)`;
+        } else ev.text = name;
+        a.resp = ins.kind;
+        a.st = 'done';
+        break;
+      }
+      case 'stop':
+      case 'end': {
+        if (a.role === 'req') {
+          flowError(s, i, '응답 없이 흐름이 끝났다', ev);
+          break;
+        }
+        if (a.tx) {
+          commitTx(s, P, i);
+          ev.ms = spend(ctx, a, lat.commit || 0, true);
+          ev.conn = true;
+          ev.text = '이번 회차 끝 (열린 트랜잭션 커밋)';
+        } else ev.text = '이번 회차 끝';
+        endRun(s, i);
+        break;
+      }
+      default:
+        flowError(s, i, `알 수 없는 블록 ${ins.t}`, ev);
+    }
+    if (a.st === 'run') a.pc = skipJmp(code, a.pc);
+    settle(s);
+    return [{ s, ev }];
+  }
+
+  function callStep(s0, i, ctx, ins) {
+    const P = ctx.P;
+    const code = ctx.code[s0.actors[i].role];
+    const outs = ['ok'];
+    if (s0.budget > 0) for (const f of (ctx.faults[ins.op] || [])) outs.push(f);
+    return outs.map((o) => {
+      const s = clone(s0);
+      const a = s.actors[i];
+      const ev = { who: label(a), id: ins.id, text: '', ms: 0, conn: !!a.tx, fault: o !== 'ok' };
+      let user;
+      if (a.role === 'req') user = a.user;
+      else if (!a.seat) {
+        flowError(s, i, '좌석을 읽기 전에는 예매 키(좌석+주인)를 알 수 없다', ev);
+        return { s, ev };
+      } else user = a.seat.holder;
+      let key = `${P.row}-${user || '없음'}`;
+      if (ins.key === 'fresh') {
+        s.seq += 1;
+        key += `-${s.seq}`;
+      }
+      if (o !== 'ok') s.budget -= 1;
+      const p = s.pg[key];
+      let vis;
+      let note = '';
+      if (ins.op === 'approve') {
+        if (o === 'ok') {
+          if (!p) {
+            s.pg[key] = { user, st: 'APPROVED' };
+            vis = 'ok';
+          } else if (p.st === 'APPROVED') {
+            vis = 'ok';
+            note = ' (같은 주문번호라 PG가 기존 승인을 돌려줌)';
+          } else {
+            vis = 'declined';
+            note = ' (취소된 주문번호는 다시 못 씀)';
+          }
+        } else if (o === 'declined') vis = 'declined';
+        else if (o === 'timeout_applied') {
+          if (!p) s.pg[key] = { user, st: 'APPROVED' };
+          vis = 'timeout';
+          note = ' (실제로는 승인됨)';
+        } else {
+          vis = 'timeout';
+          note = ' (실제로는 승인 안 됨)';
+        }
+      } else if (ins.op === 'query') {
+        if (o === 'ok') vis = p && p.st === 'APPROVED' ? 'approved' : 'none';
+        else vis = 'timeout';
+      } else {
+        if (o === 'ok' || o === 'timeout_applied') {
+          if (p && p.st === 'APPROVED') p.st = 'CANCELLED';
+        }
+        if (o === 'ok') vis = 'ok';
+        else {
+          vis = 'timeout';
+          note = o === 'timeout_applied' ? ' (실제로는 취소됨)' : ' (실제로는 취소 안 됨)';
+        }
+      }
+      ev.text = `${OP_LABEL[ins.op]} (주문번호 ${key}) → ${VIS_LABEL[ins.op][vis]}${note}`;
+      if (ctx.lat) ev.ms = spend(ctx, a, ctx.lat[ins.op] || 0, !!a.tx);
+      a.pc = skipJmp(code, ins.targets[vis]);
+      settle(s);
+      return { s, ev };
+    });
+  }
+
+  function crash(s0, i, ctx) {
+    const s = clone(s0);
+    const a = s.actors[i];
+    const ev = { who: label(a), text: '', fault: true, crash: true };
+    const hadTx = !!a.tx;
+    rollbackTx(s, i);
+    s.budget -= 1;
+    if (a.role === 'req') {
+      a.st = 'crash';
+      ev.text = `서버 다운: 응답 없음${hadTx ? ', 열린 트랜잭션 롤백' : ''}`;
+    } else {
+      ev.text = `복구 작업 다운${hadTx ? ' (열린 트랜잭션 롤백)' : ''}: 다음 회차에 다시`;
+      endRun(s, i);
+    }
+    settle(s);
+    return { s, ev };
+  }
+
+  // 정상 걸음을 장애보다 먼저 넣는다. 길이가 같은 반례라면 장애가 적은 쪽이 먼저 나온다.
+  function successors(s, ctx) {
+    const steps = [];
+    const faults = [];
+    s.actors.forEach((a, i) => {
+      if (a.st !== 'run') return;
+      const r = step(s, i, ctx);
+      if (r) for (const x of r) (x.ev.fault ? faults : steps).push(x);
+      const who = a.role === 'rec' ? 'R' : a.name;
+      if (s.budget > 0 && ctx.crash.has(who)) faults.push(crash(s, i, ctx));
+    });
+    return steps.concat(faults);
+  }
+
+  const isTerminal = (s) => !!s.err || s.actors.every((a) => a.st === 'done' || a.st === 'crash');
+
+  function finalView(s, ctx) {
+    const net = {};
+    for (const k of Object.keys(s.pg)) {
+      const p = s.pg[k];
+      if (p.st === 'APPROVED') net[p.user] = (net[p.user] || 0) + 1;
+    }
+    return {
+      row: s.db[ctx.P.row],
+      initial: initState(ctx.P, ctx.level, ctx.test).db[ctx.P.row],
+      pg: s.pg,
+      net,
+      used: (ctx.test.budget || 0) - s.budget,
+      reqs: s.actors.filter((a) => a.role === 'req').map((a) => ({ name: a.name, user: a.user, resp: a.resp, st: a.st })),
+    };
+  }
+
+  function makeTrace(nodes, qi, P) {
+    const rows = [];
+    for (let k = qi; nodes[k].p !== -1; k = nodes[k].p) {
+      const n = nodes[k];
+      rows.push(Object.assign({}, n.ev, { row: fmtRow(P, n.s.db[P.row]), pg: fmtPg(n.s.pg) }));
+    }
+    return rows.reverse();
+  }
+
+  function explore(ctx, onTerminal) {
+    const init = initState(ctx.P, ctx.level, ctx.test);
+    const nodes = [{ s: init, p: -1, ev: null }];
+    const seen = new Set([JSON.stringify(init)]);
+    let terminals = 0;
+    for (let qi = 0; qi < nodes.length; qi++) {
+      const s = nodes[qi].s;
+      if (isTerminal(s)) {
+        terminals++;
+        if (onTerminal) {
+          onTerminal(s, nodes, qi);
+          continue;
+        }
+        const v = s.err ? [`흐름 오류: ${s.err}`] : ctx.P.invariants(finalView(s, ctx), ctx.level, ctx.test);
+        if (v.length) {
+          return { pass: false, violations: v, trace: makeTrace(nodes, qi, ctx.P), states: nodes.length, terminals };
+        }
+        continue;
+      }
+      const succ = successors(s, ctx);
+      if (!succ.length) {
+        if (onTerminal) continue;
+        return {
+          pass: false,
+          violations: ['진행 불가: 모든 요청이 잠금을 기다리며 멈췄다'],
+          trace: makeTrace(nodes, qi, ctx.P),
+          states: nodes.length,
+          terminals,
+        };
+      }
+      for (const { s: s2, ev } of succ) {
+        const k = JSON.stringify(s2);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        nodes.push({ s: s2, p: qi, ev });
+        if (nodes.length > LIMIT) return { pass: null, limit: true, states: nodes.length, terminals };
+      }
+    }
+    return { pass: true, states: nodes.length, terminals };
+  }
+
+  function makeCtx(P, level, flows, test, lat) {
+    const code = { req: compile(flows.req || []) };
+    if (level.flows.includes('rec')) code.rec = compile(flows.rec || []);
+    return {
+      P,
+      level,
+      test,
+      code,
+      lat: lat || null,
+      crash: new Set(test.crash || []),
+      faults: test.faults || {},
+    };
+  }
+
+  function runTest(P, level, flows, test) {
+    return explore(makeCtx(P, level, flows, test));
+  }
+
+  function runLevel(P, level, flows) {
+    return level.tests.map((test) => ({ test, result: runTest(P, level, flows, test) }));
+  }
+
+  // 정상 경로(장애 없음, 혼자) 한 번을 돌려 스레드 점유(T)와 커넥션 점유(C)를 잰다.
+  function profile(P, level, flows, lat) {
+    const test = { actors: ['A'], budget: 0, noRec: true };
+    const ctx = makeCtx(P, level, flows, test, lat);
+    let out = null;
+    explore(ctx, (s, nodes, qi) => {
+      const a = s.actors[0];
+      if (!out) out = { T: a.t, C: a.c, resp: a.resp, err: s.err, trace: makeTrace(nodes, qi, P) };
+    });
+    return out;
+  }
+
+  // 외부 호출이 모두 타임아웃 끝까지 걸린다고 보고, 요청 하나가 살아 있을 수 있는 최대 시간을 잰다.
+  function worst(P, level, flows, lat) {
+    const test = {
+      actors: ['A'],
+      budget: 99,
+      noRec: true,
+      faults: { approve: ['declined', 'timeout_applied', 'timeout_lost'], query: ['timeout'], cancel: ['timeout_applied', 'timeout_lost'] },
+    };
+    const ctx = makeCtx(P, level, flows, test, lat);
+    let best = null;
+    explore(ctx, (s, nodes, qi) => {
+      if (s.err) return;
+      const a = s.actors[0];
+      if (!best || a.t > best.W) best = { W: a.t, trace: makeTrace(nodes, qi, P) };
+    });
+    return best;
+  }
+
+  SD.engine = { BRANCHES, RUNS, compile, runTest, runLevel, profile, worst, fmtRow, valLabel };
+  if (typeof module !== 'undefined' && module.exports) module.exports = SD;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+// ---- src/problems/seat.js
+/* 문제: 공연 좌석 예매
+ * 엔진 검증용 첫 문제. 좌석 행 하나 + PG 하나.
+ */
+(function (root) {
+  'use strict';
+  const SD = (root.SD = root.SD || {});
+  SD.problems = SD.problems || [];
+
+  const B = {
+    begin: () => ({ t: 'begin' }),
+    commit: () => ({ t: 'commit' }),
+    read: (lock) => ({ t: 'read', lock }),
+    check: (field, op, value) => ({ t: 'check', field, op, value }),
+    update: (set, where) => ({ t: 'update', set, where: where || {} }),
+    call: (op, key, br) => ({ t: 'call', op, key, br }),
+    respond: (kind) => ({ t: 'respond', kind }),
+    stop: () => ({ t: 'stop' }),
+  };
+
+  const SOLD_ME = { status: 'SOLD', holder: 'ME' };
+  const HELD_ME = { status: 'HELD', holder: 'ME' };
+  const FREE = { status: 'AVAILABLE', holder: null };
+
+  // L2 모범 답 (L3, L4 해설의 기준 설계)
+  const L2_REQ = [
+    B.update(HELD_ME, { status: 'AVAILABLE' }),
+    B.call('approve', 'stable', {
+      ok: [B.update({ status: 'SOLD' }, HELD_ME), B.respond('ok')],
+      declined: [B.update(FREE, HELD_ME), B.respond('fail')],
+      timeout: [B.respond('pending')],
+    }),
+  ];
+  const L2_REC = [
+    B.read('none'),
+    B.check('status', 'eq', 'HELD'),
+    B.call('query', 'stable', {
+      approved: [B.update({ status: 'SOLD' }, { status: 'HELD' })],
+      none: [B.update(FREE, { status: 'HELD' })],
+      timeout: [B.stop()],
+    }),
+  ];
+
+  function invariants(f, level) {
+    const out = [];
+    const row = f.row;
+    const RUNS = SD.engine.RUNS;
+    const fmt = `${row.status}/${row.holder == null ? '-' : row.holder}`;
+    if (row.status === 'AVAILABLE' && row.holder != null) out.push(`좌석이 AVAILABLE인데 주인(${row.holder})이 남았다`);
+    if (row.status !== 'AVAILABLE' && row.holder == null) out.push(`좌석이 ${row.status}인데 주인이 없다`);
+    if (f.initial.status === 'SOLD' && row.holder !== f.initial.holder) {
+      out.push(`이미 ${f.initial.holder}에게 팔린 좌석을 ${row.holder == null ? '비웠다' : `${row.holder}에게 다시 팔았다`}`);
+    }
+
+    const owner = row.status === 'SOLD' ? row.holder : null;
+    const ok = f.reqs.filter((r) => r.resp === 'ok');
+    if (ok.length > 1) out.push(`성공 응답이 ${ok.length}건 나갔다 (${ok.map((r) => r.name).join(', ')})`);
+    for (const r of ok) if (owner !== r.user) out.push(`${r.name}는 성공 응답을 받았는데 좌석 주인이 아니다 (좌석 ${fmt})`);
+
+    const users = [...new Set(f.reqs.map((r) => r.user))];
+    for (const u of users) {
+      const rs = f.reqs.filter((r) => r.user === u && r.resp);
+      const allFail = rs.length > 0 && rs.every((r) => r.resp === 'fail');
+      if (allFail && owner === u) out.push(`${u}는 실패 응답을 받았는데 좌석 주인이다`);
+      if (level.pay && allFail && owner !== u && (f.net[u] || 0) > 0) out.push(`${u}는 실패 응답을 받았는데 결제가 남았다`);
+    }
+
+    if (level.pay) {
+      const payers = new Set([...users, ...Object.keys(f.net)]);
+      for (const u of payers) {
+        const n = f.net[u] || 0;
+        if (n > 1) out.push(`${u}가 ${n}번 결제됐다 (이중 결제)`);
+        if (owner === u && n === 0) out.push(`${u}가 결제 없이 좌석을 가졌다`);
+        if (owner !== u && n > 0) out.push(`${u}는 결제됐는데 좌석이 없다`);
+      }
+      if (row.status === 'HELD') out.push(`복구 작업이 ${RUNS}회차까지 돌았는데 좌석이 HELD로 남았다`);
+    }
+
+    if (f.used === 0) {
+      if (f.initial.status === 'AVAILABLE' && ok.length === 0) out.push('장애가 없었는데 아무도 좌석을 사지 못했다');
+      const pend = f.reqs.filter((r) => r.resp === 'pending');
+      if (pend.length) out.push(`장애가 없었는데 처리 중 응답이 나갔다 (${pend.map((r) => r.name).join(', ')})`);
+    }
+    return [...new Set(out)];
+  }
+
+  const APPROVE_TIMEOUTS = ['timeout_applied', 'timeout_lost'];
+  const ALL_PG = {
+    approve: ['declined', 'timeout_applied', 'timeout_lost'],
+    query: ['timeout'],
+    cancel: ['timeout_applied', 'timeout_lost'],
+  };
+
+  SD.problems.push({
+    id: 'seat',
+    title: '공연 좌석 예매',
+    summary: '좌석 하나를 여러 명이 동시에 사려 한다. 결제가 붙고, PG가 타임아웃 나고, 서버가 죽는다.',
+    context: [
+      '콘서트 예매 서비스다. 좌석마다 행이 하나 있고, 행에는 상태(AVAILABLE, HELD, SOLD)와 주인이 있다.',
+      '문제에서는 좌석 하나(S1)만 다룬다. 같은 좌석을 여러 사람이 동시에 사려 한다.',
+      '답은 블록으로 쌓는다. 블록 하나가 면접에서 말로 하는 한 단계다. DB는 MySQL InnoDB, 격리 수준은 REPEATABLE READ다.',
+    ],
+    row: 'S1',
+    rows: { S1: { status: 'AVAILABLE', holder: null } },
+    fields: {
+      status: { label: '상태', values: ['AVAILABLE', 'HELD', 'SOLD'] },
+      holder: { label: '주인', values: ['ME', null] },
+    },
+    invariants,
+    levels: [
+      // ---------------------------------------------------------------- L1
+      {
+        id: 'L1',
+        kind: 'flow',
+        title: '기본 설계',
+        interviewer: '좌석 예매 API를 설계해 보세요. 같은 좌석을 동시에 누르면요?',
+        ask: [
+          '좌석 예매 요청이 들어온다. 좌석이 비어 있으면 요청한 사람에게 팔고(SOLD, 주인 = 나) 성공 응답을 준다. 이미 팔렸으면 실패 응답을 준다.',
+          '결제는 아직 없다. 같은 좌석에 요청이 동시에 여러 개 올 수 있다. 요청 흐름을 설계하라.',
+        ],
+        flows: ['req'],
+        pay: false,
+        palette: {
+          req: ['begin', 'commit', 'read', 'check', 'update', 'respond'],
+          status: ['AVAILABLE', 'SOLD'],
+          respond: ['ok', 'fail'],
+          calls: [],
+        },
+        rules: [
+          '성공 응답은 한 명에게만 나간다.',
+          '성공 응답을 받은 사람이 좌석 주인이다. 실패 응답을 받은 사람은 주인이 아니다.',
+          '이미 팔린 좌석의 주인은 바뀌지 않는다.',
+          '좌석 상태와 주인이 어긋나지 않는다. AVAILABLE이면 주인이 없고, SOLD면 주인이 있다.',
+          '장애가 없으면 비어 있던 좌석은 누군가에게 팔린다.',
+        ],
+        tests: [
+          { id: 'T1-1', name: '혼자 예매', tags: ['정상'], actors: ['A'], desc: 'A 혼자 빈 좌석을 산다.' },
+          { id: 'T1-2', name: '이미 팔린 좌석', tags: ['정상'], actors: ['A'], rows: { S1: { status: 'SOLD', holder: 'X' } }, desc: 'X가 이미 산 좌석을 A가 요청한다.' },
+          { id: 'T1-3', name: '두 명 동시', tags: ['동시 갱신'], actors: ['A', 'B'], desc: 'A와 B가 동시에 요청한다. 가능한 실행 순서를 모두 본다.' },
+          { id: 'T1-4', name: '세 명 동시', tags: ['동시 갱신'], actors: ['A', 'B', 'C'], desc: 'A, B, C가 동시에 요청한다.' },
+          { id: 'T1-5', name: '동시 요청 중 서버 다운', tags: ['동시 갱신', '부분 실패'], actors: ['A', 'B'], crash: ['A', 'B'], budget: 1, desc: '처리 도중 서버가 한 번 죽는다. 어느 단계 사이에서든 죽을 수 있다.' },
+        ],
+        hints: [
+          '반례에서 두 요청이 같은 값을 읽은 순간을 찾아라. 읽고, 판단하고, 쓰는 사이에 무엇이 끼어들었나?',
+          '실패 유형은 동시 갱신(갱신 손실)이다. 읽기와 쓰기가 따로 일어나면 그 사이에 다른 요청이 같은 판단을 내린다.',
+          '읽기와 쓰기 사이를 막는 방법은 두 가지다. 읽을 때부터 잠그거나(트랜잭션 + FOR UPDATE), 판단과 쓰기를 문장 하나로 합친다(조건부 변경).',
+        ],
+        answer: {
+          flows: [
+            { name: '조건부 변경 한 문장', req: [B.update(SOLD_ME, { status: 'AVAILABLE' }), B.respond('ok')] },
+            { name: '트랜잭션 + FOR UPDATE', req: [B.begin(), B.read('update'), B.check('status', 'eq', 'AVAILABLE'), B.update(SOLD_ME), B.commit(), B.respond('ok')] },
+          ],
+          why: [
+            '일반 읽기로 AVAILABLE을 확인한 뒤에 쓰면, 두 요청이 모두 AVAILABLE을 보고 둘 다 쓴다. 트랜잭션으로 감싸도 일반 SELECT는 스냅샷을 읽어서 막지 못한다.',
+            '조건부 변경(UPDATE ... WHERE status = AVAILABLE)은 판단과 쓰기가 한 문장이다. 두 번째 요청은 첫 번째가 커밋할 때까지 행 잠금에서 기다렸다가 최신 값으로 조건을 다시 보고 0건이 된다.',
+            'FOR UPDATE는 트랜잭션 안에서만 뜻이 있다. 트랜잭션 밖이면 문장이 끝나는 순간 잠금이 풀린다.',
+            '상태와 주인은 한 문장으로 같이 바꾼다. 두 문장으로 나누면 그 사이에 서버가 죽었을 때 주인 없는 SOLD가 남는다.',
+          ],
+          speak:
+            '좌석 행을 조건부로 갱신합니다. status가 AVAILABLE일 때만 SOLD와 주인을 함께 쓰고, 영향받은 행이 0이면 이미 팔린 것으로 보고 실패를 돌려줍니다. 판단과 쓰기가 한 문장이라 동시에 들어와도 두 번째 요청은 행 잠금에서 기다렸다가 0건이 됩니다. FOR UPDATE로 먼저 잠그는 방법도 되지만, 잠금을 트랜잭션 끝까지 쥐기 때문에 좌석처럼 판단이 단순하면 조건부 갱신이 잠금 시간이 짧습니다.',
+          next: ['낙관적 락(version 컬럼)과는 무엇이 다른가?', '좌석 하나가 아니라 재고 100개를 차감한다면?'],
+          refs: [],
+        },
+        validation: [
+          { name: '트랜잭션 없이 읽고 쓰기', req: [B.read('none'), B.check('status', 'eq', 'AVAILABLE'), B.update(SOLD_ME), B.respond('ok')], fails: ['T1-3', 'T1-4', 'T1-5'] },
+          { name: '트랜잭션 + 일반 읽기', req: [B.begin(), B.read('none'), B.check('status', 'eq', 'AVAILABLE'), B.update(SOLD_ME), B.commit(), B.respond('ok')], fails: ['T1-3', 'T1-4', 'T1-5'] },
+          { name: '트랜잭션 없이 FOR UPDATE', req: [B.read('update'), B.check('status', 'eq', 'AVAILABLE'), B.update(SOLD_ME), B.respond('ok')], fails: ['T1-3', 'T1-4', 'T1-5'] },
+          { name: '상태와 주인을 따로 변경', req: [B.update({ status: 'SOLD' }, { status: 'AVAILABLE' }), B.update({ holder: 'ME' }), B.respond('ok')], fails: ['T1-5'] },
+          { name: '조건 없이 덮어쓰기', req: [B.update(SOLD_ME), B.respond('ok')], fails: ['T1-2', 'T1-3', 'T1-4', 'T1-5'] },
+        ],
+      },
+      // ---------------------------------------------------------------- L2
+      {
+        id: 'L2',
+        kind: 'flow',
+        title: '결제가 붙으면',
+        interviewer: '결제는요? PG가 타임아웃 나면 어떻게 하죠? 중간에 서버가 죽으면요?',
+        ask: [
+          'L1 설계에 결제를 붙인다. 좌석을 잡고, PG에 결제 승인을 요청하고, 승인되면 예매를 확정한다.',
+          'PG 승인은 거절되거나 타임아웃이 날 수 있다. 타임아웃이면 PG가 실제로 승인했는지 알 수 없다. 서버는 어느 단계 사이에서든 죽을 수 있다.',
+          '불확실한 건은 복구 작업이 정리한다. 복구 작업은 요청이 끝나거나 죽고 충분한 시간이 지난 뒤 좌석마다 돈다. 한 번에 정리하지 못하면 다음 주기에 다시 돈다(3회차까지 본다).',
+          'PG에 같은 주문번호로 승인을 다시 요청하면 새로 결제하지 않고 기존 승인을 돌려준다. 주문번호를 매번 새로 만들면 새 결제가 된다.',
+          '요청 흐름은 L1 답에서 시작한다. 복구 흐름은 비어 있다.',
+        ],
+        flows: ['req', 'rec'],
+        inherit: 'L1',
+        pay: true,
+        palette: {
+          req: ['begin', 'commit', 'read', 'check', 'update', 'call', 'respond'],
+          rec: ['begin', 'commit', 'read', 'check', 'update', 'call', 'stop'],
+          status: ['AVAILABLE', 'HELD', 'SOLD'],
+          respond: ['ok', 'fail', 'pending'],
+          calls: ['approve', 'query', 'cancel'],
+        },
+        rules: [
+          'L1 규칙은 그대로다.',
+          '돈과 좌석이 맞는다. 결제가 남은 사람은 좌석 주인이고, 좌석 주인은 결제가 정확히 한 건 남아 있다.',
+          '복구 작업까지 끝나면 HELD로 남은 좌석이 없다.',
+          '실패 응답만 받은 사람에게는 좌석도 결제도 남지 않는다.',
+          '장애가 없으면 요청은 바로 성공이나 실패로 끝난다. 처리 중 응답은 장애가 있을 때만 쓴다.',
+          '장애는 한 실행에 한 번 일어난다. "장애 두 번" 테스트만 두 번이다.',
+        ],
+        tests: [
+          { id: 'T2-1', name: '혼자 예매', tags: ['정상'], actors: ['A'], desc: '장애 없이 A가 결제하고 산다.' },
+          { id: 'T2-2', name: '두 명 동시', tags: ['동시 갱신'], actors: ['A', 'B'], desc: '장애 없이 A와 B가 동시에 요청한다.' },
+          { id: 'T2-3', name: 'PG 거절', tags: ['외부 실패'], actors: ['A'], faults: { approve: ['declined'] }, budget: 1, desc: 'PG가 승인을 거절한다(잔액 부족 같은 확정 실패).' },
+          { id: 'T2-4', name: 'PG 타임아웃, 실제로는 승인', tags: ['결과 모름'], actors: ['A'], faults: { approve: ['timeout_applied'] }, budget: 1, desc: '승인 요청이 타임아웃 났지만 PG에서는 승인됐다.' },
+          { id: 'T2-5', name: 'PG 타임아웃, 실제로도 미승인', tags: ['결과 모름'], actors: ['A'], faults: { approve: ['timeout_lost'] }, budget: 1, desc: '승인 요청이 타임아웃 났고 PG에도 도착하지 않았다.' },
+          { id: 'T2-6', name: '요청 처리 중 서버 다운', tags: ['부분 실패'], actors: ['A'], crash: ['A'], budget: 1, desc: '요청을 처리하던 서버가 어느 단계 사이에서든 한 번 죽는다.' },
+          { id: 'T2-7', name: '복구 작업도 다운', tags: ['재실행', '부분 실패'], actors: ['A'], crash: ['A', 'R'], faults: { approve: APPROVE_TIMEOUTS }, budget: 2, desc: '요청 쪽 장애 하나에 더해 복구 작업도 도중에 한 번 죽는다. 다음 회차에 다시 돈다.' },
+          { id: 'T2-8', name: '복구 중 PG 조회 타임아웃', tags: ['결과 모름', '재실행'], actors: ['A'], faults: { approve: APPROVE_TIMEOUTS, query: ['timeout'] }, budget: 2, desc: '승인 타임아웃 뒤 복구 작업의 PG 조회도 타임아웃 난다.' },
+          { id: 'T2-9', name: '동시 요청 + PG 장애', tags: ['동시 갱신', '결과 모름'], actors: ['A', 'B'], faults: { approve: ['declined', 'timeout_applied', 'timeout_lost'] }, budget: 1, desc: 'A와 B가 동시에 요청하고, PG 승인 하나가 거절되거나 타임아웃 난다.' },
+          { id: 'T2-10', name: '동시 요청 + 서버 다운', tags: ['동시 갱신', '부분 실패'], actors: ['A', 'B'], crash: ['A', 'B'], budget: 1, desc: 'A와 B가 동시에 요청하고, 그중 하나의 서버가 죽는다.' },
+          { id: 'T2-11', name: '장애 두 번', tags: ['결과 모름', '부분 실패', '재실행'], actors: ['A'], crash: ['A', 'R'], faults: ALL_PG, budget: 2, desc: '거절, 타임아웃, 서버 다운, 조회 타임아웃 중 두 개가 연달아 일어난다.' },
+          { id: 'T2-12', name: '같은 사람이 두 번 누름', tags: ['중복 요청'], actors: ['A', { name: 'A(2)', user: 'A' }], desc: 'A가 결제 버튼을 두 번 눌러 같은 요청이 동시에 두 개 온다.' },
+        ],
+        hints: [
+          '반례 끝의 상태를 보라. 돈은 어디 있고 좌석은 어디 있나? 그 상태를 복구 작업이 알아볼 수 있었나?',
+          '실패 유형은 결과 모름과 부분 실패다. 타임아웃은 실패가 아니라 "모름"이다. 외부 호출 도중 서버가 죽어도 흔적이 남아 있어야 나중에 맞출 수 있다.',
+          '외부 호출 전에 좌석을 HELD로 바꿔 커밋해 둔다. 복구 흐름은 HELD 좌석을 읽고, 같은 주문번호로 PG를 조회해서 승인이면 SOLD, 기록이 없으면 AVAILABLE로 돌린다.',
+        ],
+        answer: {
+          flows: [
+            { name: '선점 커밋 + 처리 중 응답 + 조회 복구', req: L2_REQ, rec: L2_REC },
+            {
+              name: '타임아웃이면 망취소',
+              req: [
+                B.update(HELD_ME, { status: 'AVAILABLE' }),
+                B.call('approve', 'stable', {
+                  ok: [B.update({ status: 'SOLD' }, HELD_ME), B.respond('ok')],
+                  declined: [B.update(FREE, HELD_ME), B.respond('fail')],
+                  timeout: [
+                    B.call('cancel', 'stable', {
+                      ok: [B.update(FREE, HELD_ME), B.respond('fail')],
+                      timeout: [B.respond('pending')],
+                    }),
+                  ],
+                }),
+              ],
+              rec: L2_REC,
+            },
+          ],
+          why: [
+            'PG 호출을 트랜잭션 안에 두면, PG 승인 뒤 커밋 전에 서버가 죽을 때 좌석 변경은 롤백되고 돈만 빠진다. 복구 작업이 찾을 흔적도 없다. 외부 호출 전에 "결제 진행 중(HELD)"을 먼저 커밋해야 한다.',
+            '타임아웃을 실패로 응답하면 실제로는 승인된 건이 생긴다. 응답은 "처리 중"으로 주고 복구 작업이 PG 조회로 결론을 낸다. 아니면 그 자리에서 망취소를 보내 결과를 "미승인"으로 확정하고 실패로 응답한다.',
+            '주문번호를 매번 새로 만들면 타임아웃 뒤 재시도가 이중 결제가 된다. 예매 건마다 고정된 주문번호(멱등 키)를 쓴다.',
+            '복구 작업도 도중에 죽는다. 조건부 변경(WHERE status = HELD)으로 쓰면 몇 번을 다시 돌아도 결과가 같다.',
+            '이 모델은 PG가 타임아웃 뒤에 늦게 요청을 처리하는 경우를 뺐다. 실제로는 복구 기준 시간을 충분히 두거나(L4), 조회 대신 망취소로 결론을 강제한다.',
+          ],
+          speak:
+            '좌석을 먼저 HELD로 커밋해서 결제 진행 중이라는 흔적을 남기고, 트랜잭션 밖에서 PG를 호출합니다. 승인되면 HELD인 내 좌석만 SOLD로 바꾸고, 거절되면 AVAILABLE로 돌립니다. 타임아웃은 결과를 모르는 상태라 사용자에게는 처리 중으로 응답하고, 복구 배치가 오래된 HELD 좌석을 같은 주문번호로 PG에 조회해서 승인이면 확정, 기록이 없으면 해제합니다. 주문번호는 예매 건마다 고정이라 재시도해도 이중 결제가 나지 않고, 복구는 조건부 갱신이라 여러 번 돌아도 결과가 같습니다.',
+          next: ['PG가 타임아웃 뒤에 늦게 승인하면?', '복구 배치는 몇 초 지난 HELD부터 봐야 하나? (L4)', '사용자가 처리 중 화면에서 새로고침하면?'],
+          refs: [{ title: '카카오페이: MSA 환경에서 네트워크 예외를 잘 다루는 방법', url: 'https://tech.kakaopay.com/post/msa-transaction/' }],
+        },
+        validation: [
+          {
+            name: 'PG 호출을 트랜잭션 안에',
+            req: [
+              B.begin(),
+              B.read('update'),
+              B.check('status', 'eq', 'AVAILABLE'),
+              B.update(HELD_ME),
+              B.call('approve', 'stable', {
+                ok: [B.update({ status: 'SOLD' }), B.respond('ok')],
+                declined: [B.respond('fail')],
+                timeout: [B.respond('pending')],
+              }),
+            ],
+            rec: L2_REC,
+            fails: ['T2-6', 'T2-7', 'T2-10', 'T2-11'],
+          },
+          {
+            name: '타임아웃을 실패로 응답',
+            req: [
+              B.update(HELD_ME, { status: 'AVAILABLE' }),
+              B.call('approve', 'stable', {
+                ok: [B.update({ status: 'SOLD' }, HELD_ME), B.respond('ok')],
+                declined: [B.update(FREE, HELD_ME), B.respond('fail')],
+                timeout: [B.update(FREE, HELD_ME), B.respond('fail')],
+              }),
+            ],
+            rec: L2_REC,
+            fails: ['T2-4', 'T2-7', 'T2-8', 'T2-9', 'T2-11'],
+          },
+          {
+            name: '매번 새 주문번호로 재시도',
+            req: [
+              B.update(HELD_ME, { status: 'AVAILABLE' }),
+              B.call('approve', 'fresh', {
+                ok: [B.update({ status: 'SOLD' }, HELD_ME), B.respond('ok')],
+                declined: [B.update(FREE, HELD_ME), B.respond('fail')],
+                timeout: [
+                  B.call('approve', 'fresh', {
+                    ok: [B.update({ status: 'SOLD' }, HELD_ME), B.respond('ok')],
+                    declined: [B.update(FREE, HELD_ME), B.respond('fail')],
+                    timeout: [B.respond('pending')],
+                  }),
+                ],
+              }),
+            ],
+            rec: L2_REC,
+            fails: ['T2-4', 'T2-6', 'T2-7', 'T2-8', 'T2-9', 'T2-10', 'T2-11'],
+          },
+          { name: '복구 흐름 없음', req: L2_REQ, rec: [], fails: ['T2-4', 'T2-5', 'T2-6', 'T2-7', 'T2-8', 'T2-9', 'T2-10', 'T2-11'] },
+          {
+            name: '복구가 조회 없이 해제',
+            req: L2_REQ,
+            rec: [B.read('none'), B.check('status', 'eq', 'HELD'), B.update(FREE, { status: 'HELD' })],
+            fails: ['T2-4', 'T2-6', 'T2-7', 'T2-8', 'T2-9', 'T2-10', 'T2-11'],
+          },
+        ],
+      },
+      // ---------------------------------------------------------------- L3
+      {
+        id: 'L3',
+        kind: 'quant',
+        title: '10배면?',
+        from: 'L2',
+        interviewer: '오픈 때 요청이 평소의 10배인 초당 2,000건 몰리면 어디가 먼저 막히죠?',
+        ask: ['내가 L2에서 통과시킨 요청 흐름으로 계산한다. 정상 경로(장애 없음, 승인 성공)만 센다.'],
+        lat: { begin: 0, db: 5, commit: 5, rollback: 5, approve: 800, query: 100, cancel: 300 },
+        givens: [
+          ['DB 문장(읽기, 변경)', '5ms'],
+          ['커밋, 롤백', '5ms'],
+          ['트랜잭션 시작, 확인, 응답', '0ms'],
+          ['PG 승인 / 조회 / 취소 (평균)', '800ms / 100ms / 300ms'],
+          ['커넥션 풀', '20개'],
+          ['요청 스레드', '200개'],
+          ['PG 계약 한도', '초당 300건'],
+        ],
+        rulesText: [
+          '요청 하나는 처음부터 응답까지 스레드 하나를 쥔다.',
+          '커넥션은 트랜잭션 시작부터 커밋(또는 롤백)까지 쥔다. 트랜잭션 밖 DB 문장은 그 문장 동안만 쥔다.',
+          '응답할 때 트랜잭션이 열려 있으면 그때 커밋한다(5ms).',
+        ],
+        questions: [
+          { id: 'q1', type: 'num', tag: '용량 산정', text: '요청 하나가 커넥션을 쥐는 시간은?', unit: 'ms', answer: (m) => m.C },
+          { id: 'q2', type: 'num', tag: '용량 산정', text: '커넥션 풀(20개)이 버티는 최대 처리량은?', unit: '건/초', answer: (m) => (20 * 1000) / m.C },
+          { id: 'q3', type: 'num', tag: '용량 산정', text: '요청 스레드(200개)가 버티는 최대 처리량은?', unit: '건/초', answer: (m) => (200 * 1000) / m.T },
+          {
+            id: 'q4',
+            type: 'choice',
+            tag: '용량 산정',
+            text: '트래픽이 늘 때 가장 먼저 막히는 것은?',
+            options: ['커넥션 풀', '요청 스레드', 'PG 계약 한도'],
+            answer: (m) => {
+              const v = [(20 * 1000) / m.C, (200 * 1000) / m.T, 300];
+              return v.indexOf(Math.min(...v));
+            },
+          },
+        ],
+        essay: {
+          text: '초당 2,000건을 받아야 한다면 무엇을 바꾸나?',
+          model:
+            '먼저 막히는 곳부터 본다. 외부 호출이 트랜잭션 안에 있으면 커넥션 풀이 먼저 막힌다. 트랜잭션 밖으로 빼도 요청 스레드가 PG 응답을 기다리며 묶이고, 그다음엔 PG 계약 한도(초당 300건)가 벽이다. 2,000건을 전부 바로 결제로 넘길 수는 없다. 앞단에 대기열(입장 순번)을 두고 PG 한도 안에서만 결제 단계로 들여보낸다. 스레드가 문제면 PG 호출을 논블로킹으로 바꾸거나, 결제 요청을 큐로 넘기고 결과를 나중에 알려 준다. 오토스케일은 몇 초짜리 스파이크에는 늦다.',
+        },
+        hints: [
+          '정상 경로를 블록 단위로 따라가며, 블록마다 걸리는 시간과 그때 트랜잭션이 열려 있는지를 표로 적어 보라.',
+          '리틀의 법칙: 동시에 필요한 자원 수 = 초당 처리량 × 한 건이 자원을 쥐는 시간(초). 그러니 최대 처리량 = 자원 수 ÷ 쥐는 시간.',
+          'PG 호출이 트랜잭션 안에 있으면 그 800ms가 커넥션 점유 시간에 들어간다. 밖에 있으면 스레드 점유 시간에만 들어간다.',
+        ],
+        refs: [
+          { title: '카카오페이: 온라인 결제 서비스 2.5배 성능 개선기 (OSIV와 외부 호출)', url: 'https://tech.kakaopay.com/post/improve-service-performance/' },
+          { title: '배민: 누군가에게는 빼빼로데이 (짧은 스파이크와 오토스케일)', url: 'https://techblog.woowahan.com/2514/' },
+        ],
+      },
+      // ---------------------------------------------------------------- L4
+      {
+        id: 'L4',
+        kind: 'quant',
+        title: '그 값은 왜?',
+        from: 'L2',
+        interviewer: '복구 배치는 몇 초 지난 HELD부터 건드려요? 풀 크기는 왜 그 값이죠?',
+        ask: ['L2 요청 흐름과 L3의 계산 규칙을 그대로 쓴다.'],
+        lat: { begin: 0, db: 5, commit: 5, rollback: 5, approve: 800, query: 100, cancel: 300 },
+        worstLat: { begin: 0, db: 5, commit: 5, rollback: 5, approve: 3000, query: 1000, cancel: 2000 },
+        givens: [
+          ['PG 승인 / 조회 / 취소 타임아웃', '3,000ms / 1,000ms / 2,000ms'],
+          ['DB 문장, 커밋, 롤백', '5ms'],
+          ['목표 처리량', '초당 300건 (PG 계약 한도)'],
+        ],
+        rulesText: [
+          'PG는 타임아웃이 지난 요청은 처리하지 않는다고 본다.',
+          '최악의 경우를 볼 때는 외부 호출이 결과와 상관없이 타임아웃 시간 끝까지 걸린다고 본다.',
+          '풀과 스레드 수는 L3의 정상 경로 점유 시간으로 계산하고 소수점은 올린다.',
+        ],
+        questions: [
+          { id: 'q1', type: 'num', tag: '설정값', text: '요청 하나가 살아 있을 수 있는 최대 시간은? 복구 작업은 이 시간이 지난 HELD만 건드려야 한다.', unit: 'ms', answer: (m) => m.W },
+          { id: 'q2', type: 'num', tag: '설정값', text: '초당 300건에서 커넥션 풀이 병목이 되지 않으려면 풀은 최소 몇 개?', unit: '개', answer: (m) => Math.ceil((300 * m.C) / 1000) },
+          { id: 'q3', type: 'num', tag: '설정값', text: '초당 300건에서 스레드가 병목이 되지 않으려면 스레드는 최소 몇 개?', unit: '개', answer: (m) => Math.ceil((300 * m.T) / 1000) },
+        ],
+        essay: {
+          text: 'PG 승인 타임아웃 3초는 무엇을 보고 정하나? 짧게 잡으면, 길게 잡으면?',
+          model:
+            'PG 응답 시간 분포(P99, P99.9)를 보고 그보다 조금 길게 잡는다. 짧으면 정상 승인도 타임아웃이 나서 "결과 모름" 건과 복구 부담이 늘고, 길면 장애 때 스레드와 커넥션이 그 시간만큼 묶여 다른 요청까지 막힌다. 재시도까지 하면 사용자가 기다리는 총 시간은 타임아웃 × 시도 횟수라서, 화면에서 허용할 대기 시간을 먼저 정하고 거꾸로 나눈다. 복구 기준 시간은 요청이 살아 있을 수 있는 최대 시간보다 길어야 진행 중인 요청을 복구가 건드리지 않는다.',
+        },
+        hints: [
+          '외부 호출 결과 갈래를 전부 따라가 보라. 재시도가 있는 갈래가 가장 길다.',
+          'q2, q3은 L3과 같은 리틀의 법칙이다. 자원 수 = 처리량 × 점유 시간(초). 소수점은 올린다.',
+          '최대 시간 = 가장 긴 갈래에서 (외부 호출마다 그 타임아웃) + (DB 문장, 커밋마다 5ms).',
+        ],
+        refs: [],
+      },
+      // ---------------------------------------------------------------- L5
+      {
+        id: 'L5',
+        kind: 'choice',
+        title: 'DB 안에서는?',
+        interviewer: '그 UPDATE가 동시에 두 개 오면 InnoDB 안에서 무슨 일이 생기죠?',
+        ask: ['MySQL 8 InnoDB, 격리 수준 REPEATABLE READ 기준이다.'],
+        questions: [
+          {
+            id: 'q1',
+            tag: 'DB 내부',
+            text: '트랜잭션 안에서 일반 SELECT로 좌석을 읽고, AVAILABLE이면 조건 없는 UPDATE로 SOLD를 쓴다. A와 B가 동시에 하면?',
+            options: [
+              'B의 SELECT가 A 커밋까지 기다리므로 B는 SOLD를 읽고 실패한다.',
+              '둘 다 AVAILABLE을 읽고 둘 다 성공한다. B의 UPDATE는 A 커밋까지 기다렸다가 덮어쓴다.',
+              'B의 UPDATE는 스냅샷과 값이 달라 오류가 난다.',
+              '데드락이 나서 하나가 롤백된다.',
+            ],
+            answer: 1,
+            explain: 'InnoDB의 일반 SELECT는 잠금 없는 일관된 읽기(스냅샷)라서 기다리지 않는다. UPDATE는 A의 행 잠금을 기다리지만, 조건이 없으니 잠금이 풀린 뒤 그대로 덮어쓴다. 갱신 손실이고, REPEATABLE READ가 이걸 막아 주지 않는다.',
+          },
+          {
+            id: 'q2',
+            tag: 'DB 내부',
+            text: "UPDATE seat SET status='SOLD', holder=? WHERE id=? AND status='AVAILABLE' 을 두 트랜잭션이 동시에 실행했다. A가 먼저 잠금을 잡았다. B는?",
+            options: [
+              'B의 스냅샷에서는 AVAILABLE이라 1건 갱신된다.',
+              '기다리지 않고 바로 0건을 돌려준다.',
+              'A가 커밋할 때까지 기다렸다가, 커밋된 최신 값으로 조건을 다시 보고 0건이 된다.',
+              '잠금 대기 시간 초과로 항상 오류가 난다.',
+            ],
+            answer: 2,
+            explain: 'UPDATE의 WHERE는 스냅샷이 아니라 최신 커밋 버전을 읽는다(current read). 그래서 조건부 갱신 한 문장은 REPEATABLE READ에서도 판단과 쓰기가 원자적이다.',
+          },
+          {
+            id: 'q3',
+            tag: 'DB 내부',
+            text: 'autocommit 상태(트랜잭션 없음)에서 SELECT ... FOR UPDATE를 실행하고, 다음 문장에서 UPDATE를 한다. 잠금은 언제 풀리나?',
+            options: ['SELECT 문장이 끝나자마자', '다음 UPDATE가 끝날 때', '커넥션을 반납할 때', '잠금이 아예 잡히지 않는다'],
+            answer: 0,
+            explain: 'autocommit에서는 문장 하나가 트랜잭션 하나다. FOR UPDATE 잠금은 그 문장의 트랜잭션이 끝나면서 풀린다. 그래서 FOR UPDATE는 트랜잭션 안에서만 뜻이 있다.',
+          },
+          {
+            id: 'q4',
+            tag: 'DB 내부',
+            text: '좌석 테이블에 (show_id, seat_no) 인덱스가 없다. SELECT * FROM seat WHERE show_id=? AND seat_no=? FOR UPDATE 를 실행하면?',
+            options: [
+              '조건에 맞는 한 행에만 잠금이 걸린다.',
+              '풀 스캔하며 훑은 모든 레코드와 그 사이 갭에 잠금이 걸려, 다른 좌석 예매까지 막힌다.',
+              '테이블 잠금으로 올라간다.',
+              '인덱스가 없으면 잠금이 걸리지 않는다.',
+            ],
+            answer: 1,
+            explain: 'InnoDB는 행이 아니라 인덱스 레코드에 잠금을 건다. 쓸 인덱스가 없으면 클러스터드 인덱스를 처음부터 끝까지 훑고, REPEATABLE READ에서는 훑은 레코드와 갭을 모두 잠근다. 테이블 잠금은 아니지만 테이블 전체를 잠근 것처럼 동작한다. 잠금 읽기의 WHERE에는 인덱스가 있어야 한다.',
+          },
+          {
+            id: 'q5',
+            tag: 'DB 내부',
+            text: '예약 테이블에 seat_id 인덱스(유니크 아님)가 있다. 예약이 아직 없는 좌석에 대해 두 트랜잭션이 SELECT ... WHERE seat_id=? FOR UPDATE 로 "없음"을 확인하고 INSERT한다. 결과는?',
+            options: [
+              '두 번째 SELECT가 첫 번째 커밋까지 기다리므로 안전하다.',
+              '둘 다 INSERT에 성공해 예약이 2건 생긴다.',
+              '두 번째 INSERT가 유니크 위반으로 실패한다.',
+              '둘 다 갭 잠금을 잡고, 서로의 INSERT가 상대 갭 잠금에 막혀 데드락이 난다. 하나가 롤백된다.',
+            ],
+            answer: 3,
+            explain: '없는 행에 대한 FOR UPDATE는 그 자리의 갭에 잠금을 건다. 갭 잠금끼리는 서로 막지 않아 둘 다 통과하고, INSERT의 삽입 의도 잠금은 상대의 갭 잠금과 충돌한다. 서로를 기다리니 데드락이다. 있는지 확인하고 넣는 대신 유니크 제약에 맡기고 중복 키 오류를 처리하는 편이 낫다.',
+          },
+        ],
+        hints: [
+          '일반 SELECT와 잠금 읽기(FOR UPDATE, UPDATE의 WHERE)가 각각 어느 버전을 읽는지 구분하라.',
+          'InnoDB 잠금은 행이 아니라 인덱스 레코드와 그 사이 갭에 걸린다.',
+          '갭 잠금끼리는 충돌하지 않는다. 삽입 의도 잠금은 갭 잠금과 충돌한다.',
+        ],
+        refs: [{ title: 'MySQL 8.0 매뉴얼: Locks Set by Different SQL Statements in InnoDB', url: 'https://dev.mysql.com/doc/refman/8.0/en/innodb-locks-set.html' }],
+      },
+    ],
+  });
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+// ---- app/app.js
+/* 화면: 문제 목록, 단계별 풀이(블록 편집기, 정량, 선택), 힌트, 해설, 숙달 대시보드 */
+(function () {
+  'use strict';
+  const SD = window.SD;
+  const E = SD.engine;
+  const app = document.getElementById('app');
+
+  // ---------------------------------------------------------------- 유틸
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    if (attrs) {
+      for (const k of Object.keys(attrs)) {
+        const v = attrs[k];
+        if (v == null || v === false) continue;
+        if (k === 'class') el.className = v;
+        else if (k === 'html') el.innerHTML = v;
+        else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+        else if (k === 'value') el.value = v;
+        else el.setAttribute(k, v === true ? '' : v);
+      }
+    }
+    for (const kid of kids.flat(Infinity)) {
+      if (kid == null || kid === false) continue;
+      el.appendChild(typeof kid === 'object' ? kid : document.createTextNode(String(kid)));
+    }
+    return el;
+  }
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const fmtTime = (ms) => {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(s / 60);
+    return `${m}:${String(s % 60).padStart(2, '0')}`;
+  };
+  const toSel = (v) => (v === null ? 'NULL' : v === undefined ? '*' : String(v));
+  const fromSel = (s) => (s === 'NULL' ? null : s);
+
+  function sel(options, current, onchange, cls) {
+    const cur = toSel(current);
+    const s = h('select', { class: cls || '', onchange: (e) => onchange(fromSel(e.target.value)) });
+    for (const [v, label] of options) {
+      const o = h('option', { value: toSel(v) }, label);
+      if (toSel(v) === cur) o.selected = true;
+      s.appendChild(o);
+    }
+    if (![...s.options].some((o) => o.selected)) {
+      const ph = h('option', { value: '', disabled: true }, '선택');
+      ph.selected = true;
+      s.insertBefore(ph, s.firstChild);
+      s.classList.add('need');
+    }
+    return s;
+  }
+
+  // ---------------------------------------------------------------- 저장
+  const KEY = 'sysdesign-drill.v1';
+  let store = load();
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (s && s.v === 1) return s;
+    } catch (e) {
+      /* 비공개 창 등 */
+    }
+    return { v: 1, settings: { mode: 'basic', lockMin: 10, theme: null }, probs: {} };
+  }
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(store));
+    } catch (e) {
+      /* 저장 실패해도 화면은 동작 */
+    }
+  }
+  function attempts(pid) {
+    const p = store.probs[pid] || (store.probs[pid] = { attempts: [] });
+    if (!p.attempts.length) p.attempts.push({ startedAt: Date.now(), lv: {} });
+    return p.attempts;
+  }
+  const attempt = (pid) => attempts(pid)[attempts(pid).length - 1];
+  function lvRec(pid, lid) {
+    const a = attempt(pid);
+    return (
+      a.lv[lid] ||
+      (a.lv[lid] = { openedAt: null, solvedAt: null, gaveUp: false, hints: 0, cx: false, subs: [], flows: null, passedFlows: null, answers: {}, essay: '', self: null, essayOpen: false, last: null })
+    );
+  }
+  const settings = () => store.settings;
+  const hidden = () => settings().mode === 'hidden';
+
+  // ---------------------------------------------------------------- 라벨
+  const OP = { approve: 'PG 승인', query: 'PG 조회', cancel: 'PG 취소' };
+  const BR_LABEL = {
+    approve: { ok: '승인되면', declined: '거절되면', timeout: '타임아웃이면' },
+    query: { approved: '승인 기록이 있으면', none: '기록이 없으면', timeout: '타임아웃이면' },
+    cancel: { ok: '취소되면', timeout: '타임아웃이면' },
+  };
+  const KEY_LABEL = { stable: '예매 키 (좌석+사용자, 고정)', fresh: '매번 새 번호' };
+  const RESP = { ok: '성공', fail: '실패', pending: '처리 중' };
+  const BLOCK_NAME = {
+    begin: '트랜잭션 시작',
+    commit: '커밋',
+    read: '좌석 읽기',
+    check: '확인',
+    update: '좌석 변경',
+    call: 'PG 호출',
+    respond: '응답',
+    stop: '여기서 끝',
+  };
+  const failText = (role) => (role === 'rec' ? '이번 회차 종료' : '실패 응답');
+  const holderLabel = (v, role) => (v === 'ME' ? (role === 'rec' ? '읽은 주인' : '나') : v === null ? '없음' : v);
+
+  function describe(b, role) {
+    switch (b.t) {
+      case 'begin':
+        return '트랜잭션 시작';
+      case 'commit':
+        return '커밋';
+      case 'read':
+        return `좌석 읽기 (${b.lock === 'update' ? 'FOR UPDATE' : '일반'})`;
+      case 'check':
+        return `확인: ${b.field === 'status' ? '상태' : '주인'} ${b.op === 'ne' ? '≠' : '='} ${b.field === 'holder' ? holderLabel(b.value, role) : b.value} (아니면 ${failText(role)})`;
+      case 'update': {
+        const sets = [];
+        const set = b.set || {};
+        const where = b.where || {};
+        if (set.status !== undefined && set.status !== '*') sets.push(`상태 → ${set.status}`);
+        if (set.holder !== undefined && set.holder !== '*') sets.push(`주인 → ${holderLabel(set.holder, role)}`);
+        const ws = [];
+        if (where.status !== undefined && where.status !== '*') ws.push(`상태 = ${where.status}`);
+        if (where.holder !== undefined && where.holder !== '*') ws.push(`주인 = ${holderLabel(where.holder, role)}`);
+        return `좌석 변경: ${sets.join(', ')}${ws.length ? ` / 조건 ${ws.join(', ')} (0건이면 ${failText(role)})` : ' / 조건 없음'}`;
+      }
+      case 'call':
+        return `${OP[b.op]} (주문번호: ${KEY_LABEL[b.key] || '?'})`;
+      case 'respond':
+        return `${RESP[b.kind]} 응답`;
+      case 'stop':
+        return '여기서 끝 (다음 회차에 다시)';
+      default:
+        return b.t;
+    }
+  }
+
+  function flowText(flow, role) {
+    const lines = [];
+    const walk = (list, depth) => {
+      for (const b of list || []) {
+        lines.push(h('div', { class: `ft d${Math.min(depth, 4)} k-${b.t}` }, describe(b, role)));
+        if (b.t === 'call') {
+          for (const n of E.BRANCHES[b.op]) {
+            const sub = (b.br && b.br[n]) || [];
+            lines.push(h('div', { class: `ft br d${Math.min(depth + 1, 4)}` }, `${BR_LABEL[b.op][n]}${sub.length ? '' : ': (다음 블록으로)'}`));
+            walk(sub, depth + 2);
+          }
+        }
+      }
+    };
+    walk(flow, 0);
+    if (!lines.length) lines.push(h('div', { class: 'ft muted' }, '(비어 있음)'));
+    return h('div', { class: 'flowtext' }, lines);
+  }
+
+  // ---------------------------------------------------------------- 블록 편집기
+  function withIds(flow) {
+    return (flow || []).map((b) => {
+      const c = Object.assign({}, b, { id: uid() });
+      if (b.br) {
+        c.br = {};
+        for (const k of Object.keys(b.br)) c.br[k] = withIds(b.br[k]);
+      }
+      if (b.set) c.set = Object.assign({}, b.set);
+      if (b.where) c.where = Object.assign({}, b.where);
+      return c;
+    });
+  }
+  function getList(root, path) {
+    let list = root;
+    for (let k = 0; k < path.length; k += 2) {
+      const b = list[path[k]];
+      b.br = b.br || {};
+      list = b.br[path[k + 1]] || (b.br[path[k + 1]] = []);
+    }
+    return list;
+  }
+  function newBlock(t, pal) {
+    switch (t) {
+      case 'read':
+        return { t, lock: null };
+      case 'check':
+        return { t, field: 'status', op: 'eq', value: pal.status[0] };
+      case 'update':
+        return { t, set: { status: '*', holder: '*' }, where: { status: '*', holder: '*' } };
+      case 'call':
+        return { t, op: pal.calls[0], key: null, br: {} };
+      case 'respond':
+        return { t, kind: pal.respond[0] };
+      default:
+        return { t };
+    }
+  }
+
+  function editor(flow, role, pal, onChange) {
+    const root = h('div', { class: 'editor' });
+    const rerender = () => {
+      root.replaceChildren(renderList([], 0));
+      onChange();
+    };
+    const statusOpts = pal.status.map((s) => [s, s]);
+    const holderOpts = [
+      ['ME', role === 'rec' ? '읽은 주인' : '나'],
+      [null, '없음'],
+    ];
+
+    function blockBody(b, list, i) {
+      const set = (k, v) => {
+        b[k] = v;
+        rerender();
+      };
+      const setIn = (obj, k, v) => {
+        b[obj] = b[obj] || {};
+        b[obj][k] = v;
+        rerender();
+      };
+      switch (b.t) {
+        case 'begin':
+        case 'commit':
+          return [h('b', null, BLOCK_NAME[b.t])];
+        case 'stop':
+          return [h('b', null, '여기서 끝'), h('span', { class: 'muted' }, '이번 회차를 마친다')];
+        case 'read':
+          return [
+            h('b', null, '좌석 읽기'),
+            sel(
+              [
+                ['none', '일반 읽기'],
+                ['update', 'FOR UPDATE (쓰기 잠금)'],
+              ],
+              b.lock,
+              (v) => set('lock', v),
+            ),
+          ];
+        case 'check':
+          return [
+            h('b', null, '확인'),
+            sel(
+              [
+                ['status', '상태'],
+                ['holder', '주인'],
+              ],
+              b.field,
+              (v) => {
+                b.field = v;
+                b.value = v === 'status' ? pal.status[0] : 'ME';
+                rerender();
+              },
+            ),
+            sel(
+              [
+                ['eq', '='],
+                ['ne', '≠'],
+              ],
+              b.op,
+              (v) => set('op', v),
+              'narrow',
+            ),
+            sel(b.field === 'status' ? statusOpts : holderOpts, b.value, (v) => set('value', v)),
+            h('span', { class: 'muted' }, `아니면 ${failText(role)}`),
+          ];
+        case 'update':
+          return [
+            h('b', null, '좌석 변경'),
+            h('span', { class: 'lbl' }, '상태 →'),
+            sel([['*', '그대로'], ...statusOpts], b.set && b.set.status, (v) => setIn('set', 'status', v)),
+            h('span', { class: 'lbl' }, '주인 →'),
+            sel([['*', '그대로'], ...holderOpts], b.set && b.set.holder, (v) => setIn('set', 'holder', v)),
+            h('span', { class: 'sep' }),
+            h('span', { class: 'lbl' }, '조건: 상태 ='),
+            sel([['*', '조건 없음'], ...statusOpts], b.where && b.where.status, (v) => setIn('where', 'status', v)),
+            h('span', { class: 'lbl' }, '주인 ='),
+            sel([['*', '조건 없음'], ...holderOpts], b.where && b.where.holder, (v) => setIn('where', 'holder', v)),
+            h('span', { class: 'muted' }, `0건이면 ${failText(role)}`),
+          ];
+        case 'call':
+          return [
+            h('b', null, 'PG'),
+            sel(
+              pal.calls.map((c) => [c, OP[c].replace('PG ', '')]),
+              b.op,
+              (v) => set('op', v),
+            ),
+            h('span', { class: 'lbl' }, '주문번호'),
+            sel(
+              [
+                ['stable', KEY_LABEL.stable],
+                ['fresh', KEY_LABEL.fresh],
+              ],
+              b.key,
+              (v) => set('key', v),
+            ),
+          ];
+        case 'respond':
+          return [
+            h('b', null, '응답'),
+            sel(
+              pal.respond.map((k) => [k, RESP[k]]),
+              b.kind,
+              (v) => set('kind', v),
+            ),
+          ];
+        default:
+          return [b.t];
+      }
+    }
+
+    function renderList(path, depth) {
+      const list = getList(flow, path);
+      const wrap = h('div', { class: 'blist' });
+      list.forEach((b, i) => {
+        const tools = h(
+          'span',
+          { class: 'tools' },
+          h('button', { class: 'ib', title: '위로', disabled: i === 0, onclick: () => { list.splice(i - 1, 0, list.splice(i, 1)[0]); rerender(); } }, '↑'),
+          h('button', { class: 'ib', title: '아래로', disabled: i === list.length - 1, onclick: () => { list.splice(i + 1, 0, list.splice(i, 1)[0]); rerender(); } }, '↓'),
+          h('button', { class: 'ib del', title: '삭제', onclick: () => { list.splice(i, 1); rerender(); } }, '✕'),
+        );
+        const row = h('div', { class: `blk k-${b.t}` }, h('div', { class: 'body' }, blockBody(b, list, i)), tools);
+        const item = h('div', { class: 'item' }, row);
+        if (b.t === 'call') {
+          const brs = h('div', { class: 'branches' });
+          for (const n of E.BRANCHES[b.op]) {
+            brs.appendChild(h('div', { class: 'branch' }, h('div', { class: 'brlabel' }, BR_LABEL[b.op][n]), renderList([...path, i, n], depth + 1)));
+          }
+          item.appendChild(brs);
+        }
+        wrap.appendChild(item);
+      });
+      const adder = h(
+        'select',
+        {
+          class: 'adder',
+          onchange: (e) => {
+            const t = e.target.value;
+            if (!t) return;
+            list.push(Object.assign(newBlock(t, pal), { id: uid() }));
+            rerender();
+          },
+        },
+        h('option', { value: '' }, path.length ? '+ 이 갈래에 블록' : '+ 블록 추가'),
+        (pal[role] || []).map((t) => h('option', { value: t }, BLOCK_NAME[t])),
+      );
+      wrap.appendChild(h('div', { class: 'addrow' }, adder, path.length && !list.length ? h('span', { class: 'muted small' }, '비워 두면 호출 다음 블록으로 넘어간다') : null));
+      return wrap;
+    }
+
+    root.appendChild(renderList([], 0));
+    return root;
+  }
+
+  function lint(flow, role, out) {
+    for (const b of flow || []) {
+      if (b.t === 'read' && !b.lock) out.push('좌석 읽기: 일반 읽기인지 FOR UPDATE인지 고르세요.');
+      if (b.t === 'call' && !b.key) out.push(`${OP[b.op]}: 주문번호 방식을 고르세요.`);
+      if (b.t === 'update') {
+        const s = b.set || {};
+        if ((s.status === undefined || s.status === '*') && (s.holder === undefined || s.holder === '*')) out.push('좌석 변경: 바꿀 값을 하나 이상 고르세요.');
+      }
+      if (b.t === 'call') for (const n of E.BRANCHES[b.op]) lint(b.br && b.br[n], role, out);
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- 반례 표
+  function collapseRuns(rows) {
+    const out = [];
+    let prevRun = null;
+    let cur = null;
+    const flush = () => {
+      if (!cur) return;
+      const sig = cur.rows.map((r) => r.text + r.row + r.pg).join('|');
+      if (prevRun && prevRun.sig === sig) out.push({ who: cur.who, text: '앞 회차와 같음', same: true, row: cur.rows[cur.rows.length - 1].row, pg: cur.rows[cur.rows.length - 1].pg });
+      else out.push(...cur.rows);
+      prevRun = { sig };
+      cur = null;
+    };
+    for (const r of rows) {
+      if (r.who.startsWith('복구')) {
+        if (!cur || cur.who !== r.who) {
+          flush();
+          cur = { who: r.who, rows: [] };
+        }
+        cur.rows.push(r);
+      } else {
+        flush();
+        prevRun = null;
+        out.push(r);
+      }
+    }
+    flush();
+    return out;
+  }
+
+  function traceTable(trace, opts) {
+    const o = opts || {};
+    const rows = collapseRuns(trace);
+    let tT = 0;
+    let tC = 0;
+    return h(
+      'div',
+      { class: 'tscroll' },
+      h(
+        'table',
+        { class: 'trace' },
+        h('thead', null, h('tr', null, h('th', null, '#'), h('th', null, '누가'), h('th', null, '한 일'), o.timing ? [h('th', null, '시간'), h('th', null, '커넥션')] : [h('th', null, '좌석(커밋됨)'), h('th', null, 'PG')])),
+        h(
+          'tbody',
+          null,
+          rows.map((r, i) => {
+            if (o.timing) {
+              tT += r.ms || 0;
+              if (r.conn) tC += r.ms || 0;
+            }
+            return h(
+              'tr',
+              { class: [r.fault ? 'fault' : '', r.crash ? 'crash' : '', r.error ? 'err' : '', r.same ? 'same' : ''].join(' ') },
+              h('td', { class: 'n' }, i + 1),
+              h('td', { class: 'who' }, r.who),
+              h('td', null, r.text),
+              o.timing ? [h('td', { class: 'num' }, `${r.ms || 0}ms`), h('td', { class: 'num' }, r.conn ? '쥠' : '')] : [h('td', { class: 'mono' }, r.row), h('td', { class: 'mono' }, r.pg)],
+            );
+          }),
+        ),
+        o.timing ? h('tfoot', null, h('tr', null, h('td', { colspan: 3 }, '합계'), h('td', { class: 'num' }, `${tT}ms`), h('td', { class: 'num' }, `${tC}ms`))) : null,
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------- 라우팅
+  function go(hash) {
+    if (location.hash === hash) render();
+    else location.hash = hash;
+  }
+  window.addEventListener('hashchange', render);
+
+  function header(title, back) {
+    return h(
+      'header',
+      { class: 'top' },
+      h(
+        'div',
+        { class: 'wrap' },
+        back ? h('button', { class: 'iconbtn', onclick: () => go('#/') }, '←') : null,
+        h('h1', { onclick: () => go('#/') }, title),
+        h('span', { class: 'sp' }),
+        h(
+          'div',
+          { class: 'seg', title: '입문: 테스트 목록과 반례 공개 / 중급: 테스트 숨김, 반례는 힌트' },
+          ['basic', 'hidden'].map((m) =>
+            h(
+              'button',
+              {
+                class: settings().mode === m ? 'on' : '',
+                onclick: () => {
+                  settings().mode = m;
+                  save();
+                  render();
+                },
+              },
+              m === 'basic' ? '입문' : '중급',
+            ),
+          ),
+        ),
+        h('button', { class: 'iconbtn', title: '테마', onclick: toggleTheme }, '◐'),
+      ),
+    );
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    settings().theme = next;
+    save();
+    document.documentElement.setAttribute('data-theme', next);
+  }
+
+  function render() {
+    clearInterval(render.tick);
+    const m = location.hash.match(/^#\/p\/([^/]+)(?:\/(L\d))?/);
+    app.replaceChildren();
+    if (m) {
+      const P = SD.problems.find((p) => p.id === m[1]);
+      if (P) return renderProblem(P, m[2]);
+    }
+    renderHome();
+  }
+
+  // ---------------------------------------------------------------- 홈
+  function levelState(P, L, idx) {
+    const r = lvRec(P.id, L.id);
+    if (r.solvedAt) return 'solved';
+    if (r.gaveUp) return 'gaveup';
+    if (idx === 0) return 'open';
+    const prev = lvRec(P.id, P.levels[idx - 1].id);
+    return prev.solvedAt || prev.gaveUp ? 'open' : 'locked';
+  }
+
+  function tagStats() {
+    const st = {};
+    const add = (tag, ok, recent) => {
+      const s = st[tag] || (st[tag] = { ok: 0, n: 0, rok: 0, rn: 0 });
+      s.n++;
+      if (ok) s.ok++;
+      if (recent) {
+        s.rn++;
+        if (ok) s.rok++;
+      }
+    };
+    for (const P of SD.problems) {
+      const ats = (store.probs[P.id] && store.probs[P.id].attempts) || [];
+      ats.forEach((at, ai) => {
+        const recent = ai === ats.length - 1;
+        for (const L of P.levels) {
+          const r = at.lv[L.id];
+          if (!r || !r.subs.length) continue;
+          const first = r.subs[0];
+          if (L.kind === 'flow') for (const t of L.tests) for (const tag of t.tags) add(tag, first.res[t.id], recent);
+          else for (const q of L.questions) add(q.tag, first.res[q.id], recent);
+        }
+      });
+    }
+    return st;
+  }
+
+  function renderHome() {
+    app.appendChild(header('시스템 설계 꼬리질문'));
+    const wrap = h('main', { class: 'wrap' });
+    wrap.appendChild(
+      h(
+        'section',
+        { class: 'intro' },
+        h('p', null, '면접관이 상황을 주고 꼬리질문을 이어 간다. 설계는 블록으로 쌓고, 채점은 숨은 장애 시나리오로 한다. 동시 요청의 실행 순서, 서버가 죽는 지점, 외부 호출 결과를 모두 펼쳐 보고 규칙이 깨지는 실행을 찾아 반례로 보여 준다.'),
+        h('p', { class: 'muted small' }, '문제 → 고민(힌트 잠금) → 힌트 → 해설. 숙달 지표는 실패 유형별 첫 제출 통과율이다.'),
+      ),
+    );
+    wrap.appendChild(h('h2', null, '문제'));
+    for (const P of SD.problems) {
+      const states = P.levels.map((L, i) => levelState(P, L, i));
+      const firstOpen = P.levels.findIndex((L, i) => states[i] === 'open');
+      const target = P.levels[firstOpen >= 0 ? firstOpen : 0].id;
+      wrap.appendChild(
+        h(
+          'div',
+          { class: 'card pcard' },
+          h('div', { class: 'row' }, h('h3', null, P.title), h('span', { class: 'sp' }), h('span', { class: 'muted small' }, `${attempts(P.id).length}회차 풀이`)),
+          h('p', { class: 'muted' }, P.summary),
+          h(
+            'div',
+            { class: 'steps' },
+            P.levels.map((L, i) => h('span', { class: `step ${states[i]}` }, `${L.id} ${L.title}`)),
+          ),
+          h(
+            'div',
+            { class: 'row' },
+            h('button', { class: 'btn primary', onclick: () => go(`#/p/${P.id}/${target}`) }, states.some((s) => s === 'solved' || s === 'gaveup') ? '이어 풀기' : '풀기'),
+            h(
+              'button',
+              {
+                class: 'btn ghost',
+                onclick: () => {
+                  if (!armed(`reset-${P.id}`, '한 번 더 누르면 새 회차를 시작한다. 이전 기록은 숙달 통계에 남는다.')) return;
+                  attempts(P.id).push({ startedAt: Date.now(), lv: {} });
+                  save();
+                  go(`#/p/${P.id}/L1`);
+                },
+              },
+              '처음부터 다시 풀기',
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 숙달
+    const st = tagStats();
+    const tags = Object.keys(st).sort((a, b) => st[a].ok / st[a].n - st[b].ok / st[b].n);
+    wrap.appendChild(h('h2', null, '실패 유형별 숙달'));
+    if (!tags.length) wrap.appendChild(h('p', { class: 'muted' }, '아직 제출 기록이 없다. 단계마다 첫 제출의 테스트 결과가 유형별로 쌓인다.'));
+    else
+      wrap.appendChild(
+        h(
+          'div',
+          { class: 'card' },
+          h(
+            'table',
+            { class: 'stats' },
+            h('thead', null, h('tr', null, h('th', null, '유형'), h('th', null, '첫 제출 통과'), h('th', null, ''), h('th', null, '최근 회차'), h('th', null, '판정'))),
+            h(
+              'tbody',
+              null,
+              tags.map((t) => {
+                const s = st[t];
+                const r = s.ok / s.n;
+                const verdict = s.n < 5 ? '표본 부족' : r >= 0.8 ? '체화' : r >= 0.5 ? '익히는 중' : '약함';
+                return h(
+                  'tr',
+                  null,
+                  h('td', null, t),
+                  h('td', { class: 'num' }, `${s.ok}/${s.n}`),
+                  h('td', { class: 'barcell' }, h('div', { class: 'bar' }, h('i', { style: `width:${Math.round(r * 100)}%` }))),
+                  h('td', { class: 'num' }, s.rn ? `${s.rok}/${s.rn}` : '-'),
+                  h('td', { class: `verdict v-${verdict}` }, verdict),
+                );
+              }),
+            ),
+          ),
+          h('p', { class: 'muted small' }, '체화 = 테스트 5개 이상, 첫 제출 통과율 80% 이상. "처음부터 다시 풀기"로 회차를 늘리면 최근 회차 열에서 변화를 본다.'),
+        ),
+      );
+
+    wrap.appendChild(h('h2', null, '설정'));
+    wrap.appendChild(
+      h(
+        'div',
+        { class: 'card' },
+        h(
+          'div',
+          { class: 'row' },
+          h('span', null, '힌트·포기 잠금'),
+          sel(
+            [0, 5, 10, 15, 20].map((m) => [String(m), m ? `${m}분` : '없음']),
+            String(settings().lockMin),
+            (v) => {
+              settings().lockMin = Number(v);
+              save();
+            },
+          ),
+          h('span', { class: 'muted small' }, '단계를 처음 연 뒤 이 시간 동안은 혼자 고민한다.'),
+        ),
+        h(
+          'div',
+          { class: 'row', style: 'margin-top:10px' },
+          h('span', null, '모드'),
+          h('span', { class: 'muted small' }, '입문: 테스트 목록과 반례를 바로 보여 준다. 중급: 테스트를 숨기고 반례는 힌트 잠금이 풀린 뒤에 본다.'),
+        ),
+      ),
+    );
+    app.appendChild(wrap);
+  }
+  // confirm()은 브라우저 대화상자를 띄우므로 쓰지 않는다. 같은 버튼을 4초 안에 두 번 눌러야 실행.
+  function armed(key, msg) {
+    if (armed.key === key) {
+      armed.key = null;
+      return true;
+    }
+    armed.key = key;
+    toast(msg);
+    setTimeout(() => {
+      if (armed.key === key) armed.key = null;
+    }, 4000);
+    return false;
+  }
+  function toast(msg) {
+    const t = h('div', { class: 'toast' }, msg);
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ---------------------------------------------------------------- 문제 화면
+  function renderProblem(P, lid) {
+    const idx = Math.max(0, P.levels.findIndex((L) => L.id === lid));
+    const L = P.levels[idx];
+    const state = levelState(P, L, idx);
+    app.appendChild(header(P.title, true));
+    const wrap = h('main', { class: 'wrap' });
+    wrap.appendChild(
+      h(
+        'nav',
+        { class: 'steps big' },
+        P.levels.map((X, i) => {
+          const s = levelState(P, X, i);
+          return h('button', { class: `step ${s} ${i === idx ? 'cur' : ''}`, disabled: s === 'locked', onclick: () => go(`#/p/${P.id}/${X.id}`) }, `${X.id} ${X.title}`);
+        }),
+      ),
+    );
+    wrap.appendChild(h('details', { class: 'ctx', open: idx === 0 ? true : null }, h('summary', null, '상황'), P.context.map((p) => h('p', null, p))));
+
+    if (state === 'locked') {
+      wrap.appendChild(h('div', { class: 'card' }, h('p', null, '앞 단계를 통과하거나 해설을 열면 열린다.')));
+      app.appendChild(wrap);
+      return;
+    }
+    const r = lvRec(P.id, L.id);
+    if (!r.openedAt) {
+      r.openedAt = Date.now();
+      if (L.kind === 'flow') r.flows = initialFlows(P, L);
+      save();
+    }
+    if (L.kind === 'flow' && !r.flows) r.flows = initialFlows(P, L);
+
+    const card = h('section', { class: 'card level' });
+    card.appendChild(h('div', { class: 'interviewer' }, h('span', { class: 'who' }, '면접관'), h('span', null, `“${L.interviewer}”`)));
+    card.appendChild(h('div', { class: 'ask' }, L.ask.map((p) => h('p', null, p))));
+    card.appendChild(
+      h(
+        'div',
+        { class: 'meta row small' },
+        h('span', { class: 'pill', 'data-live': 'elapsed' }, ''),
+        h('span', { class: 'pill' }, `제출 ${r.subs.length}`),
+        h('span', { class: 'pill' }, `힌트 ${r.hints}/${L.hints.length}${r.cx ? ' + 반례' : ''}`),
+        r.solvedAt ? h('span', { class: 'pill ok' }, r.subs.length && r.subs[0].pass ? '첫 제출 통과' : '통과') : null,
+        r.gaveUp && !r.solvedAt ? h('span', { class: 'pill bad' }, '해설 열람') : null,
+      ),
+    );
+    wrap.appendChild(card);
+
+    if (L.kind === 'flow') renderFlowLevel(P, L, r, card, wrap);
+    else if (L.kind === 'quant') renderQuantLevel(P, L, r, card, wrap);
+    else renderChoiceLevel(P, L, r, card, wrap);
+
+    renderHints(P, L, r, wrap);
+    renderAnswer(P, L, r, wrap);
+
+    if ((r.solvedAt || r.gaveUp) && idx < P.levels.length - 1) {
+      wrap.appendChild(h('div', { class: 'row next' }, h('button', { class: 'btn primary', onclick: () => go(`#/p/${P.id}/${P.levels[idx + 1].id}`) }, `다음 꼬리질문: ${P.levels[idx + 1].id} ${P.levels[idx + 1].title} →`)));
+    }
+    app.appendChild(wrap);
+
+    const tick = () => {
+      const el = document.querySelector('[data-live=elapsed]');
+      if (el) el.textContent = `경과 ${fmtTime((r.solvedAt || Date.now()) - r.openedAt)}`;
+      const left = lockLeft(r);
+      document.querySelectorAll('[data-live=lock]').forEach((x) => {
+        x.textContent = left > 0 ? `${fmtTime(left)} 뒤 열림` : '';
+      });
+      if (left <= 0 && document.querySelector('[data-lockwait]')) render();
+    };
+    tick();
+    render.tick = setInterval(tick, 1000);
+  }
+
+  function initialFlows(P, L) {
+    const f = { req: [], rec: [] };
+    if (L.inherit) {
+      const pr = lvRec(P.id, L.inherit);
+      const src = pr.passedFlows || pr.flows;
+      if (src && src.req) f.req = withIds(clone(src.req));
+    }
+    return f;
+  }
+
+  const lockLeft = (r) => (r.solvedAt ? 0 : r.openedAt + settings().lockMin * 60000 - Date.now());
+
+  // ---------------------------------------------------------------- 흐름 단계
+  function renderFlowLevel(P, L, r, card, wrap) {
+    card.appendChild(h('h3', { class: 'sub' }, '지켜야 할 규칙'));
+    card.appendChild(h('ul', { class: 'rules' }, L.rules.map((x) => h('li', null, x))));
+    if (!hidden()) {
+      card.appendChild(h('h3', { class: 'sub' }, `테스트 ${L.tests.length}개`));
+      card.appendChild(
+        h(
+          'div',
+          { class: 'tests' },
+          L.tests.map((t) => h('div', { class: 'test' }, h('span', { class: 'tid' }, t.id), h('b', null, t.name), t.tags.map((g) => h('span', { class: 'tag' }, g)), h('div', { class: 'muted small' }, t.desc))),
+        ),
+      );
+    } else {
+      card.appendChild(h('p', { class: 'muted' }, `숨은 테스트 ${L.tests.length}개로 채점한다. 어떤 장애가 일어나는지는 직접 따져야 한다.`));
+    }
+    card.appendChild(
+      h(
+        'details',
+        { class: 'help' },
+        h('summary', null, '블록이 하는 일'),
+        h(
+          'ul',
+          null,
+          h('li', null, h('b', null, '트랜잭션 시작 / 커밋'), ': 그 사이의 변경은 커밋 때 한꺼번에 반영된다. 응답할 때 트랜잭션이 열려 있으면 성공·처리 중 응답은 커밋, 실패 응답은 롤백한다.'),
+          h('li', null, h('b', null, '좌석 읽기'), ': 일반 읽기는 잠그지 않는다. 트랜잭션 안이면 그 트랜잭션의 첫 읽기 시점 스냅샷을 본다. FOR UPDATE는 행을 잠그고(트랜잭션 끝까지) 최신 커밋 값을 본다. 트랜잭션 밖의 FOR UPDATE는 문장이 끝나면 잠금이 풀린다.'),
+          h('li', null, h('b', null, '확인'), ': 마지막으로 읽은 값과 비교한다. 다르면 실패 응답(트랜잭션은 롤백).'),
+          h('li', null, h('b', null, '좌석 변경'), ': UPDATE 한 문장. 행을 잠그고 최신 커밋 값으로 조건을 본다. 0건이면 실패 응답. 트랜잭션 밖이면 바로 커밋된다.'),
+          L.palette.calls.length ? h('li', null, h('b', null, 'PG 호출'), ': 결과마다 갈래가 있다. 갈래가 비어 있으면 호출 다음 블록으로 넘어간다. 주문번호가 같으면 PG는 같은 결제로 본다.') : null,
+          h('li', null, h('b', null, '응답'), ': 요청 흐름의 끝. 모든 갈래는 응답으로 끝나야 한다.'),
+          L.flows.includes('rec') ? h('li', null, h('b', null, '복구 흐름'), ': 좌석마다 돈다. 확인이 어긋나거나 변경이 0건이면, 또는 "여기서 끝"을 만나면 이번 회차를 마친다. 회차마다 처음부터 다시 돈다.') : null,
+          h('li', null, h('b', null, '서버 다운'), ': 아무 블록 사이에서나 날 수 있다. 열린 트랜잭션은 롤백되고, 다운된 요청은 응답을 받지 못한다.'),
+        ),
+      ),
+    );
+
+    const onChange = () => save();
+    for (const role of L.flows) {
+      const pal = Object.assign({}, L.palette);
+      card.appendChild(h('h3', { class: 'sub' }, role === 'req' ? '요청 흐름' : '복구 흐름'));
+      card.appendChild(editor(r.flows[role] || (r.flows[role] = []), role, pal, onChange));
+    }
+
+    const msg = h('div', { class: 'msg' });
+    const resultBox = h('div', { class: 'result' });
+    card.appendChild(
+      h(
+        'div',
+        { class: 'row actions' },
+        h(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              const errs = [];
+              if (!(r.flows.req || []).length) errs.push('요청 흐름이 비어 있다.');
+              for (const role of L.flows) lint(r.flows[role], role, errs);
+              if (errs.length) {
+                msg.replaceChildren(h('div', { class: 'warn' }, [...new Set(errs)].map((e) => h('div', null, e))));
+                return;
+              }
+              msg.replaceChildren(h('span', { class: 'muted' }, '채점 중… 실행 순서와 장애 지점을 펼치는 중'));
+              setTimeout(() => {
+                const t0 = performance.now();
+                const res = E.runLevel(P, L, r.flows);
+                const ms = Math.round(performance.now() - t0);
+                const pass = res.every((x) => x.result.pass === true);
+                const sub = { at: Date.now(), pass, res: {} };
+                for (const x of res) sub.res[x.test.id] = x.result.pass === true;
+                r.subs.push(sub);
+                r.last = {
+                  ms,
+                  results: res.map((x) => ({ id: x.test.id, pass: x.result.pass, limit: !!x.result.limit, violations: x.result.violations || [], trace: x.result.trace || null, states: x.result.states })),
+                };
+                if (pass && !r.solvedAt) {
+                  r.solvedAt = Date.now();
+                  r.passedFlows = clone(r.flows);
+                } else if (pass) r.passedFlows = clone(r.flows);
+                save();
+                render();
+              }, 30);
+            },
+          },
+          '채점',
+        ),
+        h(
+          'button',
+          {
+            class: 'btn ghost',
+            onclick: () => {
+              if (!armed(`flow-${P.id}-${L.id}`, '한 번 더 누르면 편집한 블록을 지우고 처음 상태로 돌린다.')) return;
+              r.flows = initialFlows(P, L);
+              save();
+              render();
+            },
+          },
+          '편집 초기화',
+        ),
+      ),
+    );
+    card.appendChild(msg);
+    card.appendChild(resultBox);
+    if (r.last) resultBox.appendChild(flowResult(L, r));
+  }
+
+  function flowResult(L, r) {
+    const res = r.last.results;
+    const passN = res.filter((x) => x.pass === true).length;
+    const box = h('div', null);
+    box.appendChild(
+      h(
+        'div',
+        { class: `score ${passN === res.length ? 'ok' : 'bad'}` },
+        h('b', null, `테스트 ${passN}/${res.length} 통과`),
+        h('span', { class: 'muted small' }, ` · 실행 ${res.reduce((a, x) => a + (x.states || 0), 0).toLocaleString()}개 상태를 ${r.last.ms}ms에 탐색`),
+      ),
+    );
+    const showCx = !hidden() || r.cx || r.solvedAt || r.gaveUp;
+    let firstFail = true;
+    res.forEach((x, k) => {
+      const t = L.tests.find((tt) => tt.id === x.id);
+      const name = hidden() && !(r.solvedAt || r.gaveUp) ? `숨은 테스트 #${k + 1}` : `${t.id} ${t.name}`;
+      const head = h(
+        'div',
+        { class: 'thead' },
+        h('span', { class: `mark ${x.pass ? 'ok' : 'bad'}` }, x.pass ? '✓' : x.limit ? '!' : '✗'),
+        h('b', null, name),
+        !hidden() || r.solvedAt || r.gaveUp ? t.tags.map((g) => h('span', { class: 'tag' }, g)) : null,
+      );
+      if (x.pass) {
+        box.appendChild(h('div', { class: 'tres' }, head));
+        return;
+      }
+      const body = [];
+      if (x.limit) body.push(h('div', { class: 'warn' }, '탐색 한도를 넘었다. 흐름을 줄여 보라.'));
+      body.push(h('ul', { class: 'viol' }, x.violations.map((v) => h('li', null, v))));
+      if (x.trace) {
+        if (showCx) body.push(h('div', { class: 'cxlabel small muted' }, '반례: 규칙이 깨지는 가장 짧은 실행'), traceTable(x.trace));
+        else body.push(h('div', { class: 'muted small' }, '반례는 힌트 잠금이 풀린 뒤 힌트 칸에서 볼 수 있다.'));
+      }
+      // 실패가 많으면 화면이 길어진다. 첫 실패만 펼친다.
+      box.appendChild(h('details', { class: 'tres fail', open: firstFail ? true : null }, h('summary', null, head), body));
+      firstFail = false;
+    });
+    return box;
+  }
+
+  // ---------------------------------------------------------------- 정량 단계
+  function baseFlows(P) {
+    const L2 = P.levels.find((x) => x.id === 'L2');
+    const r2 = lvRec(P.id, 'L2');
+    if (r2.passedFlows) return { L2, flows: r2.passedFlows, mine: true };
+    return { L2, flows: L2.answer.flows[0], mine: false };
+  }
+  function metrics(P, L) {
+    const b = baseFlows(P);
+    const prof = E.profile(P, b.L2, b.flows, L.lat);
+    const w = E.worst(P, b.L2, b.flows, L.worstLat || L.lat);
+    return { C: prof.C, T: prof.T, W: w ? w.W : 0, prof, worst: w, base: b };
+  }
+  const near = (x, want) => (want === 0 ? Math.abs(x) < 0.5 : Math.abs(x - want) / Math.abs(want) <= 0.1);
+
+  function renderQuantLevel(P, L, r, card) {
+    const m = metrics(P, L);
+    card.appendChild(h('h3', { class: 'sub' }, m.base.mine ? '기준 설계: 내가 L2에서 통과시킨 요청 흐름' : '기준 설계: L2 모범 답 (L2를 통과하지 않아서)'));
+    card.appendChild(flowText(m.base.flows.req, 'req'));
+    card.appendChild(h('h3', { class: 'sub' }, '주어진 값'));
+    card.appendChild(h('table', { class: 'givens' }, h('tbody', null, L.givens.map(([k, v]) => h('tr', null, h('td', null, k), h('td', { class: 'num' }, v))))));
+    card.appendChild(h('h3', { class: 'sub' }, '계산 규칙'));
+    card.appendChild(h('ul', { class: 'rules' }, L.rulesText.map((x) => h('li', null, x))));
+
+    const last = r.subs.length ? r.subs[r.subs.length - 1].res : null;
+    const done = r.solvedAt || r.gaveUp;
+    const qs = h('div', { class: 'qs' });
+    for (const q of L.questions) {
+      const mark = last ? h('span', { class: `mark ${last[q.id] ? 'ok' : 'bad'}` }, last[q.id] ? '✓' : '✗') : null;
+      let input;
+      if (q.type === 'num') {
+        input = h('div', { class: 'row' }, h('input', { type: 'text', inputmode: 'decimal', class: 'numin', value: r.answers[q.id] || '', oninput: (e) => { r.answers[q.id] = e.target.value; save(); } }), h('span', { class: 'muted' }, q.unit));
+      } else {
+        input = h(
+          'div',
+          { class: 'opts' },
+          q.options.map((o, oi) =>
+            h('label', { class: 'opt' }, h('input', { type: 'radio', name: q.id, checked: String(r.answers[q.id]) === String(oi) ? true : null, onchange: () => { r.answers[q.id] = oi; save(); } }), h('span', null, o)),
+          ),
+        );
+      }
+      const ans = done ? h('div', { class: 'small muted' }, `정답: ${q.type === 'num' ? `${+q.answer(m).toFixed(2)} ${q.unit} (±10%)` : q.options[q.answer(m)]}`) : null;
+      qs.appendChild(h('div', { class: 'q' }, h('div', { class: 'qt' }, mark, h('span', null, q.text)), input, ans));
+    }
+    card.appendChild(qs);
+    card.appendChild(
+      h(
+        'div',
+        { class: 'row actions' },
+        h(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              const res = {};
+              for (const q of L.questions) {
+                const want = q.answer(m);
+                const got = r.answers[q.id];
+                if (q.type === 'num') {
+                  const x = parseFloat(String(got == null ? '' : got).replace(/,/g, ''));
+                  res[q.id] = Number.isFinite(x) && near(x, want);
+                } else res[q.id] = got != null && Number(got) === want;
+              }
+              const pass = Object.values(res).every(Boolean);
+              r.subs.push({ at: Date.now(), pass, res });
+              if (pass && !r.solvedAt) r.solvedAt = Date.now();
+              save();
+              render();
+            },
+          },
+          '채점',
+        ),
+        h('span', { class: 'muted small' }, '수치는 ±10% 안이면 정답'),
+      ),
+    );
+    if (done) {
+      card.appendChild(h('h3', { class: 'sub' }, '풀이: 정상 경로 점유 시간'));
+      card.appendChild(traceTable(m.prof.trace, { timing: true }));
+      card.appendChild(h('p', { class: 'small' }, `스레드 점유 T = ${m.T}ms, 커넥션 점유 C = ${m.C}ms`));
+      if (L.worstLat && m.worst) {
+        card.appendChild(h('h3', { class: 'sub' }, '풀이: 가장 오래 걸리는 갈래 (외부 호출 = 타임아웃)'));
+        card.appendChild(traceTable(m.worst.trace, { timing: true }));
+      }
+    }
+    if (L.essay) card.appendChild(essay(L, r));
+  }
+
+  function essay(L, r) {
+    const box = h('div', { class: 'essay' });
+    box.appendChild(h('h3', { class: 'sub' }, `말로 답하기: ${L.essay.text}`));
+    const can = r.solvedAt || r.gaveUp;
+    const cmpBtn = h(
+      'button',
+      {
+        class: 'btn sm',
+        disabled: !can || !(r.essay || '').trim() ? true : null,
+        onclick: () => {
+          r.essayOpen = true;
+          save();
+          render();
+        },
+      },
+      can ? '모범 답과 비교' : '모범 답과 비교 (단계를 통과하면 열림)',
+    );
+    box.appendChild(
+      h(
+        'textarea',
+        {
+          rows: 4,
+          placeholder: '면접에서 말하듯 적는다. 채점하지 않고 모범 답과 나란히 비교한다.',
+          oninput: (e) => {
+            r.essay = e.target.value;
+            cmpBtn.disabled = !can || !r.essay.trim();
+            save();
+          },
+        },
+        r.essay || '',
+      ),
+    );
+    if (!r.essayOpen) {
+      box.appendChild(cmpBtn);
+    } else {
+      box.appendChild(h('div', { class: 'cmp' }, h('div', null, h('div', { class: 'small muted' }, '내 답'), h('p', null, r.essay || '')), h('div', null, h('div', { class: 'small muted' }, '모범 답'), h('p', null, L.essay.model))));
+      box.appendChild(
+        h(
+          'div',
+          { class: 'row small' },
+          h('span', { class: 'muted' }, '스스로 판정:'),
+          ['다 들어감', '일부', '빠짐'].map((x) =>
+            h(
+              'button',
+              {
+                class: `btn sm ${r.self === x ? 'primary' : 'ghost'}`,
+                onclick: () => {
+                  r.self = x;
+                  save();
+                  render();
+                },
+              },
+              x,
+            ),
+          ),
+        ),
+      );
+    }
+    return box;
+  }
+
+  // ---------------------------------------------------------------- 선택 단계
+  function renderChoiceLevel(P, L, r, card) {
+    const last = r.subs.length ? r.subs[r.subs.length - 1].res : null;
+    const done = r.solvedAt || r.gaveUp;
+    const qs = h('div', { class: 'qs' });
+    for (const q of L.questions) {
+      const ok = last && last[q.id];
+      qs.appendChild(
+        h(
+          'div',
+          { class: 'q' },
+          h('div', { class: 'qt' }, last ? h('span', { class: `mark ${ok ? 'ok' : 'bad'}` }, ok ? '✓' : '✗') : null, h('span', null, q.text)),
+          h(
+            'div',
+            { class: 'opts' },
+            q.options.map((o, oi) =>
+              h(
+                'label',
+                { class: `opt ${done && oi === q.answer ? 'right' : ''}` },
+                h('input', { type: 'radio', name: q.id, checked: String(r.answers[q.id]) === String(oi) ? true : null, onchange: () => { r.answers[q.id] = oi; save(); } }),
+                h('span', null, o),
+              ),
+            ),
+          ),
+          ok || done ? h('div', { class: 'explain small' }, q.explain) : null,
+        ),
+      );
+    }
+    card.appendChild(qs);
+    card.appendChild(
+      h(
+        'div',
+        { class: 'row actions' },
+        h(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              const res = {};
+              for (const q of L.questions) res[q.id] = r.answers[q.id] != null && Number(r.answers[q.id]) === q.answer;
+              const pass = Object.values(res).every(Boolean);
+              r.subs.push({ at: Date.now(), pass, res });
+              if (pass && !r.solvedAt) r.solvedAt = Date.now();
+              save();
+              render();
+            },
+          },
+          '채점',
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------- 힌트, 해설
+  function renderHints(P, L, r, wrap) {
+    const left = lockLeft(r);
+    const box = h('section', { class: 'card hints' }, h('div', { class: 'row' }, h('h3', null, '힌트'), h('span', { class: 'muted small', 'data-live': 'lock' }, '')));
+    if (left > 0) box.setAttribute('data-lockwait', '1');
+    for (let k = 0; k < r.hints; k++) box.appendChild(h('div', { class: 'hint' }, h('span', { class: 'hn' }, k + 1), h('span', null, L.hints[k])));
+    const row = h('div', { class: 'row' });
+    if (r.hints < L.hints.length) {
+      row.appendChild(
+        h(
+          'button',
+          {
+            class: 'btn sm',
+            disabled: left > 0 ? true : null,
+            onclick: () => {
+              r.hints++;
+              save();
+              render();
+            },
+          },
+          `힌트 ${r.hints + 1} 열기`,
+        ),
+      );
+    }
+    if (L.kind === 'flow' && hidden() && !r.cx && r.last && r.last.results.some((x) => x.pass === false)) {
+      row.appendChild(
+        h(
+          'button',
+          {
+            class: 'btn sm',
+            disabled: left > 0 ? true : null,
+            onclick: () => {
+              r.cx = true;
+              save();
+              render();
+            },
+          },
+          '반례 보기',
+        ),
+      );
+    }
+    if (!r.solvedAt && !r.gaveUp) {
+      row.appendChild(
+        h(
+          'button',
+          {
+            class: 'btn sm ghost',
+            disabled: left > 0 ? true : null,
+            onclick: () => {
+              if (!armed(`giveup-${P.id}-${L.id}`, '한 번 더 누르면 해설을 연다. 이 단계는 통과가 아닌 해설 열람으로 기록된다.')) return;
+              r.gaveUp = true;
+              save();
+              render();
+            },
+          },
+          '포기하고 해설 보기',
+        ),
+      );
+    }
+    if (row.childNodes.length) box.appendChild(row);
+    wrap.appendChild(box);
+  }
+
+  function renderAnswer(P, L, r, wrap) {
+    if (!(r.solvedAt || r.gaveUp)) return;
+    const box = h('section', { class: 'card answer' }, h('h3', null, '해설'));
+    if (L.kind === 'flow') {
+      const A = L.answer;
+      for (const f of A.flows) {
+        box.appendChild(h('div', { class: 'small muted' }, `모범 답: ${f.name}`));
+        box.appendChild(h('div', { class: 'two' }, L.flows.map((role) => h('div', null, h('div', { class: 'small' }, role === 'req' ? '요청 흐름' : '복구 흐름'), flowText(f[role] || [], role)))));
+      }
+      box.appendChild(h('h3', { class: 'sub' }, '왜'));
+      box.appendChild(h('ul', null, A.why.map((x) => h('li', null, x))));
+      box.appendChild(h('h3', { class: 'sub' }, '면접에서 말로 하면'));
+      box.appendChild(h('p', { class: 'speak' }, A.speak));
+      if (A.next && A.next.length) {
+        box.appendChild(h('h3', { class: 'sub' }, '이어서 나올 꼬리질문'));
+        box.appendChild(h('ul', null, A.next.map((x) => h('li', null, x))));
+      }
+      refs(A.refs, box);
+    } else {
+      if (L.kind === 'quant') box.appendChild(h('p', { class: 'muted small' }, '풀이 표는 위 문제 카드에 있다.'));
+      if (L.kind === 'choice') box.appendChild(h('p', { class: 'muted small' }, '문항별 설명은 위에 열려 있다.'));
+      refs(L.refs, box);
+    }
+    wrap.appendChild(box);
+  }
+  function refs(list, box) {
+    if (!list || !list.length) return;
+    box.appendChild(h('h3', { class: 'sub' }, '실무 사례'));
+    box.appendChild(h('ul', null, list.map((x) => h('li', null, h('a', { href: x.url, target: '_blank', rel: 'noopener' }, x.title)))));
+  }
+
+  // ---------------------------------------------------------------- 시작
+  if (settings().theme) document.documentElement.setAttribute('data-theme', settings().theme);
+  render();
+})();
+
+</script>
+</body>
+</html>

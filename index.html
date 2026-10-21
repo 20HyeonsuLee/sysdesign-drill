@@ -222,11 +222,43 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
   .wrap{padding:12px 16px}
   .two,.cmp{grid-template-columns:1fr}
   .tests{grid-template-columns:1fr}
-  .blk{flex-direction:column}
-  .tools{align-self:flex-end}
   .branches{margin-left:4px;padding-left:8px}
   .seg button{padding:3px 8px}
 }
+
+/* 블록 카드: 문장 + 칩 */
+.blk .body{display:flex;flex-wrap:wrap;align-items:center;gap:5px;flex:1;min-width:0;line-height:1.5}
+.fx{font-size:13.5px}
+.w{font-size:13px;color:var(--muted)}
+.clause{display:flex;flex-wrap:wrap;align-items:center;gap:5px;flex-basis:100%}
+.chip{border:1px solid var(--accent);color:var(--accent);background:var(--accent-weak);border-radius:999px;padding:2px 10px;font-size:13.5px;min-height:28px;line-height:1.3;text-align:left;max-width:100%}
+.chip.need{border-color:var(--bad);color:var(--bad);background:var(--bad-weak)}
+.chip.op{min-width:34px;text-align:center}
+.chip.add{border-style:dashed;color:var(--muted);background:none;border-color:var(--line)}
+.chip.add.paste{color:var(--accent);border-color:var(--accent)}
+.chip.mini{min-height:24px;padding:0 8px;font-size:12.5px}
+.ib.more{font-size:18px;line-height:24px;padding:0 8px;flex-shrink:0}
+.branch.empty{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.branch.empty .brlabel{margin:0}
+.adds{display:inline-flex;gap:6px;flex-wrap:wrap}
+.flowname{font-size:13px;font-weight:700;margin:14px 0 6px}
+
+/* 선택판 */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:520px;max-height:72vh;display:flex;flex-direction:column;border-radius:16px 16px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);padding-bottom:env(safe-area-inset-bottom)}
+.sheet-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.sheet-head b{flex:1;font-size:14px}
+.sheet-list{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 16px;font-size:15px}
+.sheet-opt .sub{font-size:12.5px;color:var(--muted)}
+.sheet-opt.cur{background:var(--accent-weak);color:var(--accent);font-weight:600}
+.sheet-opt.danger{color:var(--bad)}
+@media (hover:hover){.sheet-opt:hover{background:var(--box-bg)}}
+
+/* 말로 먼저 설계 */
+.draft{margin-top:14px}
+.draftin{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);resize:vertical;font-size:14.5px}
+.draft-text{white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--box-bg);font-size:14px}
 
 </style>
 </head>
@@ -14393,6 +14425,69 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     return s;
   }
 
+  // ---------------------------------------------------------------- 선택판
+  // 아래에서 올라오는 목록. items: [{ label, sub, cur, cls, onClick }]
+  function closeSheet() {
+    const old = document.querySelector('.sheet-bg');
+    if (old) old.remove();
+  }
+  function openSheet(title, items) {
+    closeSheet();
+    const bg = h('div', {
+      class: 'sheet-bg',
+      onclick: (e) => {
+        if (e.target === bg) closeSheet();
+      },
+    });
+    const list = h(
+      'div',
+      { class: 'sheet-list' },
+      items.map((it) =>
+        h(
+          'button',
+          {
+            class: `sheet-opt ${it.cur ? 'cur' : ''} ${it.cls || ''}`,
+            type: 'button',
+            onclick: () => {
+              closeSheet();
+              it.onClick();
+            },
+          },
+          h('span', null, it.label),
+          it.sub ? h('span', { class: 'sub' }, it.sub) : null,
+        ),
+      ),
+    );
+    bg.appendChild(h('div', { class: 'sheet', role: 'dialog', 'aria-label': title }, h('div', { class: 'sheet-head' }, h('b', null, title), h('button', { class: 'ib', type: 'button', title: '닫기', onclick: closeSheet }, '✕')), list));
+    document.body.appendChild(bg);
+    const first = list.querySelector('.sheet-opt.cur') || list.querySelector('.sheet-opt');
+    if (first) first.focus();
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSheet();
+  });
+  // 고르는 칸: 누르면 선택판이 열린다. 아직 안 골랐으면(또는 재료에 없는 값이면) "고르기"로 빨갛게 보인다.
+  function chip(title, options, current, onPick, cls) {
+    const hit = current === undefined ? null : options.find((o) => enc(o[0]) === enc(current));
+    return h(
+      'button',
+      {
+        class: `chip ${hit ? '' : 'need'} ${cls || ''}`,
+        type: 'button',
+        onclick: () =>
+          openSheet(
+            title,
+            options.map(([v, l]) => ({
+              label: l,
+              cur: !!hit && enc(v) === enc(current),
+              onClick: () => onPick(clone(v)),
+            })),
+          ),
+      },
+      hit ? hit[1] : '고르기',
+    );
+  }
+
   // ---------------------------------------------------------------- 저장
   const KEY = 'sysdesign-drill.v1';
   let store = load();
@@ -14499,9 +14594,114 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     respond: '응답',
     stop: '여기서 끝',
   };
+  const BLOCK_DESC = {
+    begin: '여기부터 커밋까지를 한 트랜잭션으로 묶는다',
+    commit: '트랜잭션의 변경을 반영하고 잠금을 푼다',
+    read: '행 하나를 읽는다 (일반, FOR UPDATE, 복제본)',
+    count: '조건에 맞는 행 수를 센다',
+    check: '값을 비교하고, 다르면 실패로 끝낸다',
+    if: '조건에 따라 갈래를 나눈다',
+    update: 'UPDATE 한 문장 (1건, 0건 갈래)',
+    delete: 'DELETE 한 문장 (1건, 0건 갈래)',
+    insert: 'INSERT 한 문장 (들어감, 중복 갈래)',
+    call: '외부 시스템을 부른다 (결과별 갈래)',
+    publish: '메시지를 토픽에 쓴다 (성공, 실패, 타임아웃 갈래)',
+    ack: '지금 메시지까지 처리했다고 알린다',
+    cget: '캐시 값을 읽는다 (있음, 없음 갈래)',
+    cset: '캐시에 쓴다 (항상, 없을 때만, 버전이 클 때만)',
+    cdel: '캐시 키를 지운다',
+    cincr: '캐시 숫자를 원자적으로 더한다',
+    respond: '요청에 응답하고 흐름을 끝낸다',
+    stop: '이번 행이나 메시지 처리를 마친다',
+  };
   const READ_MODE = { none: '일반 읽기', update: 'FOR UPDATE (쓰기 잠금)', replica: '복제본에서 읽기' };
   const CSET_COND = { always: '항상', absent: '없을 때만', newer: '버전이 더 클 때만' };
   const RESP = { ok: '성공', fail: '실패', pending: '처리 중' };
+
+  // 재료 합치기: 중급 모드는 그 문제의 모든 흐름 단계 재료를 합쳐 보여 준다(재료 목록이 힌트가 되지 않게).
+  const pairsUnion = (a, b) => {
+    const out = (a || []).slice();
+    for (const x of b || []) if (!out.some((y) => enc(y[0]) === enc(x[0]))) out.push(x);
+    return out;
+  };
+  const byUnion = (a, b, key) => {
+    const out = (a || []).slice();
+    for (const x of b || []) if (!out.some((y) => key(y) === key(x))) out.push(x);
+    return out;
+  };
+  const setUnion = (a, b) => [...new Set([...(a || []), ...(b || [])])];
+  function mergePal(a, b) {
+    const m = clone(a || {});
+    b = b || {};
+    m.blocks = setUnion(m.blocks, b.blocks);
+    m.tables = m.tables || {};
+    for (const t of Object.keys(b.tables || {})) {
+      const had = (a && a.tables && a.tables[t]) || null;
+      const x = m.tables[t] || (m.tables[t] = {});
+      x.keys = pairsUnion(x.keys, b.tables[t].keys);
+      x.read = setUnion(had ? readModes({ tables: { [t]: had } }, t) : [], readModes(b, t));
+      delete x.lock;
+    }
+    m.conds = m.conds || [];
+    for (const c of b.conds || []) {
+      const x = m.conds.find((y) => enc(y.a) === enc(c.a));
+      if (!x) m.conds.push(clone(c));
+      else {
+        x.ops = setUnion(x.ops || ['eq'], c.ops || ['eq']);
+        x.b = pairsUnion(x.b, c.b);
+      }
+    }
+    for (const k of ['set', 'where']) {
+      m[k] = m[k] || {};
+      for (const t of Object.keys(b[k] || {})) {
+        m[k][t] = m[k][t] || {};
+        for (const f of Object.keys(b[k][t])) {
+          if (k === 'set') m.set[t][f] = pairsUnion(m.set[t][f], b.set[t][f]);
+          else {
+            const x = m.where[t][f] || (m.where[t][f] = { v: [] });
+            x.ops = setUnion(x.ops || ['eq'], b.where[t][f].ops || ['eq']);
+            x.v = pairsUnion(x.v, b.where[t][f].v);
+          }
+        }
+      }
+    }
+    m.deletes = setUnion(m.deletes, b.deletes);
+    for (const k of ['inserts', 'counts', 'publishes']) m[k] = byUnion(m[k], b[k], (x) => x.label);
+    m.calls = m.calls || [];
+    for (const c of b.calls || []) {
+      const x = m.calls.find((y) => y.ext === c.ext);
+      if (!x) m.calls.push(clone(c));
+      else {
+        x.ops = setUnion(x.ops, c.ops);
+        x.keys = pairsUnion(x.keys, c.keys);
+      }
+    }
+    if (b.caches) {
+      m.caches = m.caches || {};
+      for (const c of Object.keys(b.caches)) {
+        const x = m.caches[c] || (m.caches[c] = {});
+        const y = b.caches[c];
+        x.keys = pairsUnion(x.keys, y.keys);
+        x.values = pairsUnion(x.values, y.values);
+        x.by = y.by || x.by ? pairsUnion(x.by, y.by) : undefined;
+        x.conds = setUnion(x.conds, y.conds);
+      }
+    }
+    m.respond = pairsUnion(m.respond, b.respond);
+    if (m.respondValues || b.respondValues) m.respondValues = pairsUnion(m.respondValues, b.respondValues);
+    return m;
+  }
+  const palCache = new Map();
+  function allPal(P, L, role) {
+    const key = `${P.id}/${L.id}/${role}/all`;
+    if (!palCache.has(key)) {
+      let m = (L.palette && L.palette[role]) || {};
+      for (const X of P.levels) if (X !== L && X.kind === 'flow' && X.palette && X.palette[role]) m = mergePal(m, X.palette[role]);
+      palCache.set(key, m);
+    }
+    return palCache.get(key);
+  }
+  const palFor = (P, L, role) => (hidden() ? allPal(P, L, role) : (L.palette && L.palette[role]) || {});
 
   function flowSpec(L, id) {
     return L.flows.find((f) => f.id === id);
@@ -14533,7 +14733,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
   }
 
   function describe(P, L, role, b) {
-    const pal = (L.palette && L.palette[role]) || {};
+    const pal = allPal(P, L, role);
     const keyName = (t, k) => nameIn(P, L, pal.tables && pal.tables[t] && pal.tables[t].keys, k);
     switch (b.t) {
       case 'begin':
@@ -14708,6 +14908,18 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     }
   }
 
+  // 복사하거나 잘라낸 블록. 같은 화면 안에서 다른 갈래, 다른 흐름에 붙여 넣는다.
+  let clip = null;
+  const strip = (b) => {
+    const c = clone(b);
+    const drop = (x) => {
+      delete x.id;
+      for (const k of Object.keys(x.br || {})) x.br[k].forEach(drop);
+    };
+    drop(c);
+    return c;
+  };
+
   function editor(P, L, flow, role, pal, onChange) {
     const root = h('div', { class: 'editor' });
     const rerender = () => {
@@ -14715,27 +14927,31 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       onChange();
     };
     const tableOpts = (list) => list.map((t) => [t, tl(P, t)]);
+    const fixed = (x) => h('span', { class: 'fx' }, x);
+    const word = (x) => h('span', { class: 'w' }, x);
+    const T = (x) => h('b', null, x);
 
-    function blockBody(b) {
-      const set = (k, v) => {
+    function body(b) {
+      const set = (k) => (v) => {
         b[k] = v;
         rerender();
       };
-      const title = (x) => h('b', null, x);
       switch (b.t) {
         case 'begin':
         case 'commit':
-          return [title(BLOCK_NAME[b.t])];
+          return [T(BLOCK_NAME[b.t])];
         case 'ack':
-          return [title('소비 확인'), h('span', { class: 'muted' }, '지금 메시지까지 오프셋 커밋')];
-        case 'stop':
-          return [title('여기서 끝'), h('span', { class: 'muted' }, failText(L, role) === '실패 응답' ? '' : failText(L, role))];
+          return [T('소비 확인'), word('(오프셋 커밋)')];
+        case 'stop': {
+          const f = failText(L, role);
+          return [T('여기서 끝'), f === '실패 응답' ? null : word(`(${f})`)];
+        }
         case 'read': {
           const ts = Object.keys(pal.tables || {});
-          const out = [title('읽기')];
+          const out = [];
           if (ts.length > 1)
             out.push(
-              sel(tableOpts(ts), b.table, (v) => {
+              chip('읽을 테이블', tableOpts(ts), b.table, (v) => {
                 b.table = v;
                 b.key = only1((pal.tables[v] || {}).keys);
                 delete b.lock;
@@ -14743,18 +14959,20 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
                 rerender();
               }),
             );
-          else out[0] = title(`${tl(P, b.table)} 읽기`);
           if (b.table) {
             const ko = keyOpts(P, L, pal, b.table);
-            if (ko.length > 1) out.push(sel(ko, b.key, (v) => set('key', v)));
-            else out.push(h('span', { class: 'lbl' }, ko[0] ? ko[0][1] : ''));
+            if (ts.length <= 1 && !ko.some(([, l]) => String(l).includes(tl(P, b.table)))) out.push(fixed(tl(P, b.table)));
+            out.push(ko.length > 1 || b.key === undefined ? chip('읽을 행', ko, b.key, set('key')) : fixed(ko[0] ? ko[0][1] : ''));
+          }
+          out.push(T('읽기'));
+          if (b.table) {
             const modes = readModes(pal, b.table);
-            if (modes.length > 1) {
-              const cur = b.src === 'replica' ? 'replica' : b.lock;
+            if (modes.length > 1)
               out.push(
-                sel(
+                chip(
+                  '읽기 방식',
                   modes.map((m) => [m, READ_MODE[m]]),
-                  cur,
+                  b.src === 'replica' ? 'replica' : b.lock,
                   (v) => {
                     if (v === 'replica') {
                       b.src = 'replica';
@@ -14767,22 +14985,23 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
                   },
                 ),
               );
-            }
           }
           return out;
         }
         case 'count':
         case 'insert': {
           const list = pal[b.t === 'insert' ? 'inserts' : 'counts'] || [];
+          const k = list.findIndex((x) => x.label === b.label);
           return [
-            title(BLOCK_NAME[b.t]),
-            sel(
-              list.map((x, k) => [k, x.label]),
-              list.findIndex((x) => x.label === b.label) >= 0 ? list.findIndex((x) => x.label === b.label) : undefined,
-              (k) => {
+            T(BLOCK_NAME[b.t]),
+            chip(
+              b.t === 'insert' ? '넣을 행' : '셀 것',
+              list.map((x, i) => [i, x.label]),
+              k >= 0 ? k : undefined,
+              (i) => {
                 const keep = { id: b.id, t: b.t, br: b.br };
                 for (const x of Object.keys(b)) delete b[x];
-                Object.assign(b, keep, clone(list[k]));
+                Object.assign(b, keep, clone(list[i]));
                 rerender();
               },
             ),
@@ -14793,8 +15012,9 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
           const cs = pal.conds || [];
           const c = condEntry(pal, b.a);
           const out = [
-            title(b.t === 'check' ? '확인' : '조건'),
-            sel(
+            T(b.t === 'check' ? '확인' : '조건'),
+            chip(
+              '비교할 값',
               cs.map((x) => [x.a, x.label || E.tokText(P, L, x.a)]),
               b.a,
               (v) => {
@@ -14808,107 +15028,67 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
           ];
           if (c) {
             const ops = c.ops || ['eq'];
-            if (ops.length > 1) out.push(sel(ops.map((o) => [o, E.OP_TEXT[o]]), b.op, (v) => set('op', v), 'narrow'));
-            else out.push(h('span', null, E.OP_TEXT[ops[0]]));
-            if (!E.UNARY[b.op]) out.push(sel(opts(P, L, c.b), b.b, (v) => set('b', v)));
+            out.push(ops.length > 1 ? chip('비교', ops.map((o) => [o, E.OP_TEXT[o]]), b.op, set('op'), 'op') : fixed(E.OP_TEXT[ops[0]]));
+            if (!E.UNARY[b.op]) out.push(chip('비교 대상', opts(P, L, c.b), b.b, set('b')));
           }
-          if (b.t === 'check') out.push(h('span', { class: 'muted' }, `아니면 ${failText(L, role)}`));
+          if (b.t === 'check') out.push(word(`아니면 ${failText(L, role)}`));
           return out;
         }
         case 'update':
-        case 'delete': {
-          const ts = Object.keys(b.t === 'update' ? pal.set || {} : pal.tables || {}).filter((t) => b.t === 'update' || (pal.deletes || []).includes(t));
-          const out = [title(b.t === 'update' ? '변경' : '삭제')];
-          if (ts.length > 1)
-            out.push(
-              sel(tableOpts(ts), b.table, (v) => {
-                b.table = v;
-                b.key = only1((pal.tables[v] || {}).keys);
-                b.set = {};
-                b.where = [];
-                rerender();
-              }),
-            );
-          else if (b.table) out[0] = title(`${tl(P, b.table)} ${b.t === 'update' ? '변경' : '삭제'}`);
-          if (!b.table) return out;
-          const ko = keyOpts(P, L, pal, b.table);
-          if (ko.length > 1) out.push(sel(ko, b.key, (v) => set('key', v)));
-          else out.push(h('span', { class: 'lbl' }, ko[0] ? ko[0][1] : ''));
-          if (b.t === 'update') {
-            const S = (pal.set && pal.set[b.table]) || {};
-            out.push(h('span', { class: 'sep' }));
-            for (const f of Object.keys(S)) {
-              out.push(h('span', { class: 'lbl' }, `${E.fieldLabel(P, b.table, f)} →`));
-              out.push(
-                sel([['*', '그대로'], ...opts(P, L, S[f])], b.set && b.set[f] !== undefined ? b.set[f] : '*', (v) => {
-                  b.set = b.set || {};
-                  b.set[f] = v;
-                  rerender();
-                }),
-              );
-            }
-          }
-          const Wh = (pal.where && pal.where[b.table]) || {};
-          if (Object.keys(Wh).length) out.push(h('span', { class: 'sep' }), h('span', { class: 'lbl' }, '조건:'));
-          for (const f of Object.keys(Wh)) {
-            const spec = Wh[f];
-            const ops = spec.ops || ['eq'];
-            const cur = (b.where || []).find((c) => c.f === f);
-            const setCond = (op, v) => {
-              b.where = (b.where || []).filter((c) => c.f !== f);
-              if (v !== '*') b.where.push({ f, op, v });
-              rerender();
-            };
-            out.push(h('span', { class: 'lbl' }, E.fieldLabel(P, b.table, f)));
-            if (ops.length > 1) out.push(sel(ops.map((o) => [o, E.OP_TEXT[o]]), cur ? cur.op : ops[0], (op) => setCond(op, cur ? cur.v : spec.v[0][0]), 'narrow'));
-            else out.push(h('span', null, E.OP_TEXT[ops[0]]));
-            if (!(cur && E.UNARY[cur.op])) out.push(sel([['*', '조건 없음'], ...opts(P, L, spec.v)], cur ? cur.v : '*', (v) => setCond(cur ? cur.op : ops[0], v)));
-          }
-          return out;
-        }
+        case 'delete':
+          return writeBody(b, set);
         case 'call': {
-          const calls = pal.calls || [];
           const choices = [];
-          for (const c of calls) {
+          for (const c of pal.calls || []) {
             const X = P.world.exts[c.ext];
             for (const op of c.ops) choices.push([`${c.ext}.${op}`, `${X.label} ${X.ops[op].label}`]);
           }
           const ce = callEntry(pal, b.ext);
           const X = b.ext && P.world.exts[b.ext];
-          return [
-            title('외부 호출'),
-            sel(choices, b.ext && b.op ? `${b.ext}.${b.op}` : undefined, (v) => {
-              const [ext, op] = v.split('.');
-              if (ext !== b.ext) b.key = only1((callEntry(pal, ext) || {}).keys);
-              b.ext = ext;
-              b.op = op;
-              b.br = {};
-              rerender();
-            }),
-            X ? h('span', { class: 'lbl' }, X.keyLabel || '요청 번호') : null,
-            ce ? sel(opts(P, L, ce.keys), b.key, (v) => set('key', v)) : null,
+          const cur = b.ext && b.op ? `${b.ext}.${b.op}` : undefined;
+          const out = [
+            choices.length > 1 || cur === undefined
+              ? chip('호출할 연산', choices, cur, (v) => {
+                  const [ext, op] = v.split('.');
+                  if (ext !== b.ext) b.key = only1((callEntry(pal, ext) || {}).keys);
+                  b.ext = ext;
+                  b.op = op;
+                  b.br = {};
+                  rerender();
+                })
+              : fixed(choices[0][1]),
+            T('호출'),
           ];
+          if (X && ce) {
+            const ko = opts(P, L, ce.keys);
+            out.push(word(X.keyLabel || '요청 번호'));
+            out.push(ko.length > 1 || b.key === undefined ? chip(X.keyLabel || '요청 번호', ko, b.key, set('key')) : fixed(ko[0] ? ko[0][1] : ''));
+          }
+          return out;
         }
         case 'publish': {
           const list = pal.publishes || [];
           const pe = list.find((x) => x.label === b.label);
-          return [
-            title('발행'),
-            sel(
-              list.map((x, k) => [k, x.label]),
-              pe ? list.indexOf(pe) : undefined,
-              (k) => {
-                const p = list[k];
-                b.label = p.label;
-                b.topic = p.topic;
-                b.payload = clone(p.payload);
-                b.pkey = p.pkeys ? only1(p.pkeys) : null;
-                rerender();
-              },
-            ),
-            pe && pe.pkeys ? h('span', { class: 'lbl' }, '파티션 키') : null,
-            pe && pe.pkeys ? sel(opts(P, L, pe.pkeys), b.pkey, (v) => set('pkey', v)) : null,
+          const out = [
+            T('발행'),
+            list.length > 1 || !pe
+              ? chip(
+                  '보낼 메시지',
+                  list.map((x, i) => [i, x.label]),
+                  pe ? list.indexOf(pe) : undefined,
+                  (i) => {
+                    const p = list[i];
+                    b.label = p.label;
+                    b.topic = p.topic;
+                    b.payload = clone(p.payload);
+                    b.pkey = p.pkeys ? only1(p.pkeys) : null;
+                    rerender();
+                  },
+                )
+              : fixed(pe.label),
           ];
+          if (pe && pe.pkeys) out.push(word('파티션 키'), chip('파티션 키', opts(P, L, pe.pkeys), b.pkey, set('pkey')));
+          return out;
         }
         case 'cget':
         case 'cset':
@@ -14916,20 +15096,42 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         case 'cincr': {
           const cs = Object.keys(pal.caches || {});
           const C = (b.cache && pal.caches[b.cache]) || {};
-          const out = [title(BLOCK_NAME[b.t])];
-          if (cs.length > 1) out.push(sel(cs.map((c) => [c, P.world.caches[c].label]), b.cache, (v) => set('cache', v)));
+          const out = [];
+          out.push(
+            cs.length > 1 || !b.cache
+              ? chip(
+                  '캐시',
+                  cs.map((c) => [c, P.world.caches[c].label]),
+                  b.cache,
+                  (v) => {
+                    b.cache = v;
+                    const N = pal.caches[v] || {};
+                    b.key = only1(N.keys);
+                    if (b.t === 'cset') {
+                      b.v = only1(N.values);
+                      b.cond = N.conds && N.conds.length === 1 ? N.conds[0] : undefined;
+                    }
+                    rerender();
+                  },
+                )
+              : fixed(P.world.caches[b.cache].label),
+          );
           if (!b.cache) return out;
           const ko = opts(P, L, C.keys);
-          if (ko.length > 1) out.push(sel(ko, b.key, (v) => set('key', v)));
-          else out.push(h('span', { class: 'lbl' }, ko[0] ? ko[0][1] : ''));
-          if (b.t === 'cincr' && C.by && C.by.length > 1) out.push(sel(opts(P, L, C.by), b.by, (v) => set('by', v)));
+          out.push(ko.length > 1 || b.key === undefined ? chip('캐시 키', ko, b.key, set('key')) : fixed(ko[0] ? ko[0][1] : ''));
+          if (b.t === 'cget') out.push(T('읽기'));
+          if (b.t === 'cdel') out.push(T('삭제'));
+          if (b.t === 'cincr') {
+            const by = C.by ? opts(P, L, C.by) : [[1, '1 증가']];
+            out.push(by.length > 1 ? chip('얼마나', by, b.by, set('by')) : T(by[0][1]));
+          }
           if (b.t === 'cset') {
-            out.push(h('span', { class: 'lbl' }, '←'));
-            out.push(sel(opts(P, L, C.values), b.v, (v) => set('v', v)));
+            out.push(T('쓰기'), word('←'), chip('쓸 값', opts(P, L, C.values), b.v, set('v')));
             const conds = C.conds || ['always'];
             if (conds.length > 1)
               out.push(
-                sel(
+                chip(
+                  '쓰기 조건',
                   conds.map((c) => [c, CSET_COND[c]]),
                   b.cond,
                   (v) => {
@@ -14943,12 +15145,17 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
           return out;
         }
         case 'respond': {
-          const out = [title('응답'), sel(opts(P, L, pal.respond), b.kind, (v) => set('kind', v))];
-          if (pal.respondValues) out.push(h('span', { class: 'lbl' }, '값'), sel([[undefined, '없음'], ...opts(P, L, pal.respondValues)].map((o) => (o[0] === undefined ? ['__none', o[1]] : o)), b.v === undefined ? '__none' : b.v, (v) => {
-            if (v === '__none') delete b.v;
-            else b.v = v;
-            rerender();
-          }));
+          const ro = opts(P, L, pal.respond);
+          const out = [ro.length > 1 || b.kind === undefined ? chip('응답 종류', ro, b.kind, set('kind')) : fixed(ro[0][1]), T('응답')];
+          if (pal.respondValues)
+            out.push(
+              word('값'),
+              chip('응답에 담을 값', [['__none', '없음'], ...opts(P, L, pal.respondValues)], b.v === undefined ? '__none' : b.v, (v) => {
+                if (v === '__none') delete b.v;
+                else b.v = v;
+                rerender();
+              }),
+            );
           return out;
         }
         default:
@@ -14956,42 +15163,237 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       }
     }
 
+    // 변경, 삭제: 바꿀 값과 조건은 고른 것만 보이고, 더할 때는 "＋"로 고른다.
+    function writeBody(b, set) {
+      const ts = Object.keys(b.t === 'update' ? pal.set || {} : pal.tables || {}).filter((t) => b.t === 'update' || (pal.deletes || []).includes(t));
+      const out = [];
+      if (ts.length > 1 || !b.table)
+        out.push(
+          chip(b.t === 'update' ? '바꿀 테이블' : '지울 테이블', tableOpts(ts), b.table, (v) => {
+            b.table = v;
+            b.key = only1((pal.tables[v] || {}).keys);
+            b.set = {};
+            b.where = [];
+            rerender();
+          }),
+        );
+      if (b.table) {
+        const ko = keyOpts(P, L, pal, b.table);
+        if (!(ts.length > 1) && !ko.some(([, l]) => String(l).includes(tl(P, b.table)))) out.push(fixed(tl(P, b.table)));
+        out.push(ko.length > 1 || b.key === undefined ? chip('행', ko, b.key, set('key')) : fixed(ko[0] ? ko[0][1] : ''));
+      }
+      out.push(T(b.t === 'update' ? '변경' : '삭제'));
+      if (!b.table) return out;
+      const F = (f) => E.fieldLabel(P, b.table, f);
+      if (b.t === 'update') {
+        const S = (pal.set && pal.set[b.table]) || {};
+        b.set = b.set || {};
+        const on = Object.keys(S).filter((f) => b.set[f] !== undefined && b.set[f] !== '*');
+        const line = h('span', { class: 'clause' });
+        for (const f of on)
+          line.append(
+            word(`${F(f)} →`),
+            chip(`${F(f)} 바꿀 값`, [['*', '바꾸지 않음'], ...opts(P, L, S[f])], b.set[f], (v) => {
+              b.set[f] = v;
+              rerender();
+            }),
+          );
+        const rest = Object.keys(S).filter((f) => !on.includes(f));
+        if (rest.length)
+          line.append(
+            h(
+              'button',
+              {
+                class: 'chip add',
+                type: 'button',
+                onclick: () =>
+                  openSheet(
+                    '바꿀 필드',
+                    rest.map((f) => ({
+                      label: F(f),
+                      onClick: () =>
+                        openSheet(
+                          `${F(f)} 바꿀 값`,
+                          opts(P, L, S[f]).map(([v, l]) => ({
+                            label: l,
+                            onClick: () => {
+                              b.set[f] = clone(v);
+                              rerender();
+                            },
+                          })),
+                        ),
+                    })),
+                  ),
+              },
+              '＋ 바꿀 값',
+            ),
+          );
+        out.push(line);
+      }
+      const Wh = (pal.where && pal.where[b.table]) || {};
+      if (Object.keys(Wh).length) {
+        b.where = b.where || [];
+        const line = h('span', { class: 'clause' }, word('조건'));
+        const conds = b.where.filter((x) => x.v !== '*');
+        if (!conds.length) line.append(word('없음'));
+        for (const c of conds) {
+          const spec = Wh[c.f] || { v: [] };
+          const ops = spec.ops || ['eq'];
+          const setCond = (op, v) => {
+            b.where = b.where.filter((x) => x.f !== c.f);
+            if (v !== '*') b.where.push({ f: c.f, op, v });
+            rerender();
+          };
+          line.append(word(F(c.f)));
+          line.append(ops.length > 1 ? chip('비교', ops.map((o) => [o, E.OP_TEXT[o]]), c.op, (op) => setCond(op, E.UNARY[op] ? null : c.v), 'op') : fixed(E.OP_TEXT[ops[0]]));
+          if (E.UNARY[c.op]) line.append(h('button', { class: 'chip', type: 'button', onclick: () => setCond(c.op, '*') }, '조건 빼기'));
+          else line.append(chip(`${F(c.f)} 조건 값`, [['*', '조건 빼기'], ...opts(P, L, spec.v)], c.v, (v) => setCond(c.op, v)));
+        }
+        const restW = Object.keys(Wh).filter((f) => !b.where.some((x) => x.f === f));
+        const addCond = (f) => {
+          const spec = Wh[f];
+          const ops = spec.ops || ['eq'];
+          const pickVal = (op) => {
+            if (E.UNARY[op]) {
+              b.where.push({ f, op, v: null });
+              rerender();
+              return;
+            }
+            openSheet(
+              `${F(f)} 조건 값`,
+              opts(P, L, spec.v).map(([v, l]) => ({
+                label: l,
+                onClick: () => {
+                  b.where.push({ f, op, v: clone(v) });
+                  rerender();
+                },
+              })),
+            );
+          };
+          if (ops.length > 1) openSheet('비교', ops.map((o) => ({ label: E.OP_TEXT[o], onClick: () => pickVal(o) })));
+          else pickVal(ops[0]);
+        };
+        if (restW.length) line.append(h('button', { class: 'chip add', type: 'button', onclick: () => openSheet('조건 필드', restW.map((f) => ({ label: F(f), onClick: () => addCond(f) }))) }, '＋ 조건'));
+        out.push(line);
+      }
+      return out;
+    }
+
+    function blockMenu(list, i) {
+      const b = list[i];
+      openSheet(
+        describe(P, L, role, b),
+        [
+          i > 0
+            ? {
+                label: '위로 올리기',
+                onClick: () => {
+                  list.splice(i - 1, 0, list.splice(i, 1)[0]);
+                  rerender();
+                },
+              }
+            : null,
+          i < list.length - 1
+            ? {
+                label: '아래로 내리기',
+                onClick: () => {
+                  list.splice(i + 1, 0, list.splice(i, 1)[0]);
+                  rerender();
+                },
+              }
+            : null,
+          {
+            label: '복사',
+            sub: '갈래 안 블록까지 같이',
+            onClick: () => {
+              clip = strip(b);
+              toast('복사했다. 넣을 곳의 "붙여넣기"를 누른다.');
+              rerender();
+            },
+          },
+          {
+            label: '잘라내기',
+            sub: '옮길 곳의 "붙여넣기"로 넣는다',
+            onClick: () => {
+              clip = strip(b);
+              list.splice(i, 1);
+              rerender();
+            },
+          },
+          {
+            label: '삭제',
+            cls: 'danger',
+            onClick: () => {
+              list.splice(i, 1);
+              rerender();
+            },
+          },
+        ].filter(Boolean),
+      );
+    }
+
+    function addButtons(list, compact) {
+      const span = h('span', { class: 'adds' });
+      span.append(
+        h(
+          'button',
+          {
+            class: `chip add ${compact ? 'mini' : ''}`,
+            type: 'button',
+            onclick: () =>
+              openSheet(
+                '블록 넣기',
+                (pal.blocks || []).map((t) => ({
+                  label: BLOCK_NAME[t],
+                  sub: BLOCK_DESC[t],
+                  onClick: () => {
+                    list.push(Object.assign(newBlock(P, L, t, pal), { id: uid() }));
+                    rerender();
+                  },
+                })),
+              ),
+          },
+          compact ? '＋' : '＋ 블록',
+        ),
+      );
+      if (clip)
+        span.append(
+          h(
+            'button',
+            {
+              class: `chip add paste ${compact ? 'mini' : ''}`,
+              type: 'button',
+              title: describe(P, L, role, clip),
+              onclick: () => {
+                list.push(withIds([clip])[0]);
+                rerender();
+              },
+            },
+            '붙여넣기',
+          ),
+        );
+      return span;
+    }
+
     function renderList(path, depth) {
       const list = getList(flow, path);
       const wrap = h('div', { class: 'blist' });
       list.forEach((b, i) => {
-        const tools = h(
-          'span',
-          { class: 'tools' },
-          h('button', { class: 'ib', title: '위로', disabled: i === 0, onclick: () => { list.splice(i - 1, 0, list.splice(i, 1)[0]); rerender(); } }, '↑'),
-          h('button', { class: 'ib', title: '아래로', disabled: i === list.length - 1, onclick: () => { list.splice(i + 1, 0, list.splice(i, 1)[0]); rerender(); } }, '↓'),
-          h('button', { class: 'ib del', title: '삭제', onclick: () => { list.splice(i, 1); rerender(); } }, '✕'),
-        );
-        const row = h('div', { class: `blk k-${b.t}` }, h('div', { class: 'body' }, blockBody(b)), tools);
+        const row = h('div', { class: `blk k-${b.t}` }, h('div', { class: 'body' }, body(b)), h('button', { class: 'ib more', type: 'button', title: '블록 메뉴', 'aria-label': '블록 메뉴', onclick: () => blockMenu(list, i) }, '⋯'));
         const item = h('div', { class: 'item' }, row);
         const brs = E.branchesOf(P, b);
         if (brs.length) {
           const box = h('div', { class: 'branches' });
-          for (const br of brs) box.appendChild(h('div', { class: 'branch' }, h('div', { class: 'brlabel' }, br.label), renderList([...path, i, br.n], depth + 1)));
+          for (const br of brs) {
+            const sub = getList(flow, [...path, i, br.n]);
+            if (!sub.length) box.appendChild(h('div', { class: 'branch empty' }, h('span', { class: 'brlabel' }, br.label), h('span', { class: 'muted small' }, '다음 블록으로'), addButtons(sub, true)));
+            else box.appendChild(h('div', { class: 'branch' }, h('div', { class: 'brlabel' }, br.label), renderList([...path, i, br.n], depth + 1)));
+          }
           item.appendChild(box);
         }
         wrap.appendChild(item);
       });
-      const adder = h(
-        'select',
-        {
-          class: 'adder',
-          onchange: (e) => {
-            const t = e.target.value;
-            if (!t) return;
-            list.push(Object.assign(newBlock(P, L, t, pal), { id: uid() }));
-            rerender();
-          },
-        },
-        h('option', { value: '' }, path.length ? '+ 이 갈래에 블록' : '+ 블록 추가'),
-        (pal.blocks || []).map((t) => h('option', { value: t }, BLOCK_NAME[t])),
-      );
-      wrap.appendChild(h('div', { class: 'addrow' }, adder, path.length && !list.length ? h('span', { class: 'muted small' }, '비워 두면 다음 블록으로 넘어간다') : null));
+      wrap.appendChild(h('div', { class: 'addrow' }, addButtons(list, depth > 0)));
       return wrap;
     }
 
@@ -15410,6 +15812,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         'div',
         { class: 'meta row small' },
         h('span', { class: 'pill', 'data-live': 'elapsed' }, ''),
+        L.kind === 'flow' && r.draftAt ? h('span', { class: 'pill' }, `설계 ${fmtTime(r.draftAt - r.openedAt)}`) : null,
+        L.kind === 'flow' && r.draftAt ? h('span', { class: 'pill', 'data-live': 'xfer' }, '') : null,
         h('span', { class: 'pill' }, `제출 ${r.subs.length}`),
         h('span', { class: 'pill' }, `힌트 ${r.hints}/${L.hints.length}${r.cx ? ' + 반례' : ''}`),
         r.solvedAt ? h('span', { class: 'pill ok' }, r.subs.length && r.subs[0].pass ? '첫 제출 통과' : '통과') : null,
@@ -15433,6 +15837,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     const tick = () => {
       const el = document.querySelector('[data-live=elapsed]');
       if (el) el.textContent = `경과 ${fmtTime((r.solvedAt || Date.now()) - r.openedAt)}`;
+      const xf = document.querySelector('[data-live=xfer]');
+      if (xf && r.draftAt) xf.textContent = `옮기기 ${fmtTime((r.solvedAt || Date.now()) - r.draftAt)}`;
       const left = lockLeft(r);
       document.querySelectorAll('[data-live=lock]').forEach((x) => {
         x.textContent = left > 0 ? `${fmtTime(left)} 뒤 열림` : '';
@@ -15481,7 +15887,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     const used = new Set();
     let replica = false;
     for (const id of Object.keys(L.palette || {})) {
-      const pal = L.palette[id];
+      const pal = palFor(P, L, id);
       for (const t of pal.blocks || []) used.add(t === 'commit' ? 'begin' : t === 'cset' || t === 'cdel' ? 'cget' : t);
       if ((pal.blocks || []).includes('cincr')) used.add('cincr');
       for (const t of Object.keys(pal.tables || {})) if ((pal.tables[t].read || []).includes('replica')) replica = true;
@@ -15523,10 +15929,58 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     }
     card.appendChild(h('details', { class: 'help' }, h('summary', null, '블록이 하는 일'), h('ul', null, helpItems(P, L))));
 
+    // 1. 말로 먼저 설계한다. 다 적어야 블록 편집기가 열린다(이 기능 전에 시작한 단계는 건너뛴다).
+    const gate = !r.draftAt && !r.solvedAt && !r.gaveUp && !r.subs.length;
+    const dbox = h('div', { class: 'draft' });
+    if (gate) {
+      dbox.appendChild(h('h3', { class: 'sub' }, '1. 말로 먼저 설계하기'));
+      dbox.appendChild(h('p', { class: 'muted small' }, '면접에서 말하듯 3~5줄로 적는다. 무엇을 어떤 순서로 하고, 트랜잭션은 어디서 끊고, 장애가 나면 어떻게 되는지. 다 적으면 블록으로 옮겨 채점한다. 여기까지 걸린 시간이 설계 시간으로 남는다.'));
+      const btn = h(
+        'button',
+        {
+          class: 'btn primary',
+          type: 'button',
+          disabled: (r.draft || '').trim().length < 10 ? true : null,
+          onclick: () => {
+            r.draftAt = Date.now();
+            save();
+            render();
+          },
+        },
+        '다 적었다, 블록으로 옮기기',
+      );
+      dbox.appendChild(
+        h(
+          'textarea',
+          {
+            rows: 5,
+            class: 'draftin',
+            placeholder: '예: 먼저 …를 하고, …이면 …한다. 서버가 …에서 죽으면 …',
+            oninput: (e) => {
+              r.draft = e.target.value;
+              btn.disabled = r.draft.trim().length < 10;
+              save();
+            },
+          },
+          r.draft || '',
+        ),
+      );
+      dbox.appendChild(h('div', { class: 'row actions' }, btn, h('span', { class: 'muted small' }, '블록 편집기는 이 단계가 끝나야 열린다.')));
+      card.appendChild(dbox);
+      return;
+    }
+    if (r.draft) {
+      dbox.appendChild(h('h3', { class: 'sub' }, '1. 내가 말로 한 설계'));
+      dbox.appendChild(h('div', { class: 'draft-text' }, r.draft));
+      card.appendChild(dbox);
+    }
+
     const onChange = () => save();
+    card.appendChild(h('h3', { class: 'sub' }, r.draft ? '2. 블록으로 옮겨 채점하기' : '블록으로 설계하기'));
+    if (hidden()) card.appendChild(h('p', { class: 'muted small' }, '중급: 이 문제의 모든 단계 재료를 함께 보여 준다. 쓰지 않을 재료도 섞여 있다.'));
     for (const fs of L.flows) {
-      card.appendChild(h('h3', { class: 'sub' }, fs.label));
-      card.appendChild(editor(P, L, r.flows[fs.id] || (r.flows[fs.id] = []), fs.id, L.palette[fs.id] || {}, onChange));
+      card.appendChild(h('div', { class: 'flowname' }, fs.label));
+      card.appendChild(editor(P, L, r.flows[fs.id] || (r.flows[fs.id] = []), fs.id, palFor(P, L, fs.id), onChange));
     }
 
     const msg = h('div', { class: 'msg' });
@@ -15916,7 +16370,31 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       box.appendChild(h('h3', { class: 'sub' }, '왜'));
       box.appendChild(h('ul', null, A.why.map((x) => h('li', null, x))));
       box.appendChild(h('h3', { class: 'sub' }, '면접에서 말로 하면'));
-      box.appendChild(h('p', { class: 'speak' }, A.speak));
+      if (r.draft) {
+        box.appendChild(h('div', { class: 'cmp' }, h('div', null, h('div', { class: 'small muted' }, '내가 먼저 쓴 설계'), h('p', { class: 'draft-text' }, r.draft)), h('div', null, h('div', { class: 'small muted' }, '모범 답'), h('p', null, A.speak))));
+        box.appendChild(
+          h(
+            'div',
+            { class: 'row small' },
+            h('span', { class: 'muted' }, '스스로 판정:'),
+            ['다 들어감', '일부', '빠짐'].map((x) =>
+              h(
+                'button',
+                {
+                  class: `btn sm ${r.draftSelf === x ? 'primary' : 'ghost'}`,
+                  type: 'button',
+                  onclick: () => {
+                    r.draftSelf = x;
+                    save();
+                    render();
+                  },
+                },
+                x,
+              ),
+            ),
+          ),
+        );
+      } else box.appendChild(h('p', { class: 'speak' }, A.speak));
       if (A.next && A.next.length) {
         box.appendChild(h('h3', { class: 'sub' }, '이어서 나올 꼬리질문'));
         box.appendChild(h('ul', null, A.next.map((x) => h('li', null, x))));

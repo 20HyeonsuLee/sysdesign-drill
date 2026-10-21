@@ -67,7 +67,8 @@ header.top h1{font-size:16px;margin:0;font-weight:700;cursor:pointer;white-space
 .small{font-size:13px}
 h2{font-size:18px;margin:26px 0 10px}
 h3{font-size:15px;margin:0}
-h3.sub{margin:18px 0 8px;font-size:14px}
+h3.sub{margin:24px 0 10px;font-size:16px;font-weight:700;letter-spacing:-.01em}
+h3.sub.first{margin-top:2px}
 p{margin:6px 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
 .intro p{margin:4px 0}
@@ -90,7 +91,8 @@ details.ctx p{font-size:14px}
 /* 문제 카드 */
 .interviewer{display:flex;gap:10px;align-items:baseline;background:var(--accent-weak);border-radius:10px;padding:10px 12px;margin-bottom:10px}
 .interviewer .who{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
-.ask p{margin:6px 0}
+.ask{margin:10px 0 0;padding-left:18px}
+.ask li{margin:6px 0;line-height:1.6}
 .meta{margin-top:10px}
 ul.rules{margin:0;padding-left:20px}
 ul.rules li{margin:2px 0}
@@ -259,6 +261,67 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
 .draft{margin-top:14px}
 .draftin{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--card);resize:vertical;font-size:14.5px}
 .draft-text{white-space:pre-wrap;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--box-bg);font-size:14px}
+
+/* 가독성: 문제 화면 배치 */
+.wrap.wide{max-width:1280px}
+.lv-work>.card{margin-bottom:12px}
+.attempt{margin:-4px 0 10px;gap:10px}
+details.fold{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.fold>summary{cursor:pointer;font-size:15px;list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:'▸';display:inline-block;width:16px;color:var(--muted);transition:transform .15s}
+details.fold[open]>summary::before{transform:rotate(90deg)}
+details.fold>.tests,details.fold>.helplist{margin-top:10px}
+.helplist{padding-left:18px;font-size:14px}
+.helplist li{margin:6px 0}
+.test .thd{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.test .tags{margin:2px 0}
+.test .tag{margin-left:0;margin-right:4px}
+@media (min-width:1100px){
+  .lv-grid{display:grid;grid-template-columns:minmax(380px,460px) minmax(0,1fr);gap:16px;align-items:start}
+  .lv-info{position:sticky;top:62px;max-height:calc(100vh - 74px);overflow-y:auto;border-radius:14px}
+  .lv-info .card{margin-bottom:0}
+  .lv-info .tests{grid-template-columns:1fr}
+  .refbar{display:none!important}
+}
+@media (max-width:1099px){
+  .refbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;justify-content:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+  .lv-work{padding-bottom:56px}
+  .toast{bottom:76px}
+}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px 18px;font-size:14.5px}
+.sheet-body .tests{grid-template-columns:1fr}
+
+/* 결과 */
+.passes{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 10px}
+.passchip{font-size:12.5px;padding:1px 8px;border-radius:999px;background:var(--ok-weak);color:var(--ok);white-space:nowrap}
+.whob{display:inline-block;padding:0 7px;border-radius:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.whob.c0{background:#e3ebfd;color:#1d4ed8}.whob.c1{background:#fde7d9;color:#b45309}.whob.c2{background:#e4f5e9;color:#15803d}
+.whob.c3{background:#f1e6fd;color:#7c3aed}.whob.c4{background:#fde4ea;color:#be185d}.whob.c5{background:#e0f4f6;color:#0e7490}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .whob.c0{background:#1f2d4d;color:#9db8ff}:root:not([data-theme="light"]) .whob.c1{background:#3a2a17;color:#fdba74}:root:not([data-theme="light"]) .whob.c2{background:#163323;color:#86efac}:root:not([data-theme="light"]) .whob.c3{background:#2e2142;color:#c4b5fd}:root:not([data-theme="light"]) .whob.c4{background:#3d1d2a;color:#f9a8d4}:root:not([data-theme="light"]) .whob.c5{background:#14333a;color:#67e8f9}}
+:root[data-theme="dark"] .whob.c0{background:#1f2d4d;color:#9db8ff}:root[data-theme="dark"] .whob.c1{background:#3a2a17;color:#fdba74}:root[data-theme="dark"] .whob.c2{background:#163323;color:#86efac}:root[data-theme="dark"] .whob.c3{background:#2e2142;color:#c4b5fd}:root[data-theme="dark"] .whob.c4{background:#3d1d2a;color:#f9a8d4}:root[data-theme="dark"] .whob.c5{background:#14333a;color:#67e8f9}
+table.trace td{line-height:1.5}
+
+/* 홈 카드 */
+.h2row h2{margin-bottom:6px}
+button.pcard{display:block;width:100%;text-align:left;cursor:pointer;padding:14px 16px;margin-bottom:10px}
+@media (hover:hover){button.pcard:hover{border-color:var(--accent)}}
+.prow{display:flex;align-items:center;gap:10px}
+.ptitle{font-size:16px;font-weight:700;flex:1;min-width:0}
+.dots{display:inline-flex;gap:4px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block}
+.dot.solved{background:var(--ok)}
+.dot.gaveup{background:var(--mid)}
+.dot.open{background:none;box-shadow:inset 0 0 0 2px var(--accent)}
+.pstatus{font-size:12.5px;color:var(--muted);white-space:nowrap;min-width:52px;text-align:right}
+.pstatus.ok{color:var(--ok)}
+.psum{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+h3.axis{margin:22px 0 8px;font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.02em}
+
+@media (max-width:640px){
+  .steps.big{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+  .steps.big .step{white-space:nowrap;flex-shrink:0}
+}
 
 </style>
 </head>
@@ -14488,6 +14551,20 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     );
   }
 
+  // 내용이 있는 아래 패널(규칙, 테스트를 편집 중에 다시 볼 때)
+  function openPanel(title, nodes) {
+    closeSheet();
+    const bg = h('div', {
+      class: 'sheet-bg',
+      onclick: (e) => {
+        if (e.target === bg) closeSheet();
+      },
+    });
+    bg.appendChild(h('div', { class: 'sheet', role: 'dialog', 'aria-label': title }, h('div', { class: 'sheet-head' }, h('b', null, title), h('button', { class: 'ib', type: 'button', title: '닫기', onclick: closeSheet }, '✕')), h('div', { class: 'sheet-body' }, nodes)));
+    document.body.appendChild(bg);
+  }
+  const wideScreen = () => window.matchMedia('(min-width: 1100px)').matches;
+
   // ---------------------------------------------------------------- 저장
   const KEY = 'sysdesign-drill.v1';
   let store = load();
@@ -14735,13 +14812,18 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
   function describe(P, L, role, b) {
     const pal = allPal(P, L, role);
     const keyName = (t, k) => nameIn(P, L, pal.tables && pal.tables[t] && pal.tables[t].keys, k);
+    // 행 이름에 테이블 이름이 들어 있으면 그대로, 아니면 테이블 이름을 앞에 붙인다.
+    const place = (t, k) => {
+      const kn = keyName(t, k);
+      return String(kn).includes(tl(P, t)) ? kn : `${tl(P, t)} ${kn}`;
+    };
     switch (b.t) {
       case 'begin':
       case 'commit':
       case 'ack':
         return BLOCK_NAME[b.t] + (b.t === 'ack' ? ' (오프셋 커밋)' : '');
       case 'read':
-        return `${tl(P, b.table)} 읽기: ${keyName(b.table, b.key)} (${b.src === 'replica' ? '복제본' : b.lock === 'update' ? 'FOR UPDATE' : '일반'})`;
+        return `${place(b.table, b.key)} 읽기 (${b.src === 'replica' ? '복제본' : b.lock === 'update' ? 'FOR UPDATE' : '일반'})`;
       case 'count':
         return b.label || `${tl(P, b.table)} 개수 세기`;
       case 'check':
@@ -14761,8 +14843,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         }
         const Wh = (pal.where && pal.where[b.table]) || {};
         const ws = (b.where || []).filter((c) => c.v !== '*').map((c) => `${E.fieldLabel(P, b.table, c.f)} ${E.OP_TEXT[c.op || 'eq']}${E.UNARY[c.op] ? '' : ` ${nameIn(P, L, Wh[c.f] && Wh[c.f].v, c.v)}`}`);
-        const head = `${tl(P, b.table)} ${b.t === 'update' ? '변경' : '삭제'}: ${keyName(b.table, b.key)}`;
-        return `${head}${sets.length ? ` / ${sets.join(', ')}` : ''}${ws.length ? ` / 조건 ${ws.join(', ')}` : ' / 조건 없음'}`;
+        const head = `${place(b.table, b.key)} ${b.t === 'update' ? '변경' : '삭제'}`;
+        return `${head}${sets.length ? `: ${sets.join(', ')}` : ''} (${ws.length ? `조건 ${ws.join(', ')}` : '조건 없음'})`;
       }
       case 'insert':
         return b.label || `${tl(P, b.table)} 넣기`;
@@ -14810,9 +14892,11 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     const walk = (list, depth) => {
       for (const b of list || []) {
         lines.push(h('div', { class: `ft d${Math.min(depth, 4)} k-${b.t}` }, describe(P, L, role, b)));
+        // 빈 갈래(다음 블록으로 넘어가는 갈래)는 적지 않는다.
         for (const br of E.branchesOf(P, b)) {
           const sub = (b.br && b.br[br.n]) || [];
-          lines.push(h('div', { class: `ft br d${Math.min(depth + 1, 4)}` }, `${br.label}${sub.length ? '' : ': (다음 블록으로)'}`));
+          if (!sub.length) continue;
+          lines.push(h('div', { class: `ft br d${Math.min(depth + 1, 4)}` }, br.label));
           walk(sub, depth + 2);
         }
       }
@@ -15279,11 +15363,36 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       return out;
     }
 
+    function pickBlock(list, at) {
+      openSheet(
+        '블록 넣기',
+        (pal.blocks || []).map((t) => ({
+          label: BLOCK_NAME[t],
+          sub: BLOCK_DESC[t],
+          onClick: () => {
+            list.splice(at, 0, Object.assign(newBlock(P, L, t, pal), { id: uid() }));
+            rerender();
+          },
+        })),
+      );
+    }
+
     function blockMenu(list, i) {
       const b = list[i];
       openSheet(
         describe(P, L, role, b),
         [
+          { label: '아래에 블록 넣기', onClick: () => pickBlock(list, i + 1) },
+          clip
+            ? {
+                label: '아래에 붙여넣기',
+                sub: describe(P, L, role, clip),
+                onClick: () => {
+                  list.splice(i + 1, 0, withIds([clip])[0]);
+                  rerender();
+                },
+              }
+            : null,
           i > 0
             ? {
                 label: '위로 올리기',
@@ -15340,18 +15449,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
           {
             class: `chip add ${compact ? 'mini' : ''}`,
             type: 'button',
-            onclick: () =>
-              openSheet(
-                '블록 넣기',
-                (pal.blocks || []).map((t) => ({
-                  label: BLOCK_NAME[t],
-                  sub: BLOCK_DESC[t],
-                  onClick: () => {
-                    list.push(Object.assign(newBlock(P, L, t, pal), { id: uid() }));
-                    rerender();
-                  },
-                })),
-              ),
+            onclick: () => pickBlock(list, list.length),
           },
           compact ? '＋' : '＋ 블록',
         ),
@@ -15393,7 +15491,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         }
         wrap.appendChild(item);
       });
-      wrap.appendChild(h('div', { class: 'addrow' }, addButtons(list, depth > 0)));
+      // 안쪽 갈래는 블록 메뉴의 "아래에 블록 넣기"로 더한다. 맨 바깥 목록에만 추가 줄을 둔다.
+      if (depth === 0) wrap.appendChild(h('div', { class: 'addrow' }, addButtons(list, false)));
       return wrap;
     }
 
@@ -15491,9 +15590,17 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     return h('div', { class: 'chg' }, entries.map(([k, v]) => h('div', null, h('span', { class: 'muted' }, `${k} `), h('span', { class: 'mono' }, v))));
   }
 
+  // 같은 표 안에서 행위자가 처음 나온 순서대로 색을 붙인다. 배경 흐름 회차는 같은 색이다.
+  const whoBase = (w) => String(w).replace(/ \d+회차$| \(.*\)$/, '');
   function traceTable(trace, o) {
     o = o || {};
     const rows = collapseRuns(trace.rows);
+    const colors = new Map();
+    const colorOf = (w) => {
+      const k = whoBase(w);
+      if (!colors.has(k)) colors.set(k, colors.size % 6);
+      return colors.get(k);
+    };
     let tT = 0;
     let tC = 0;
     const table = h(
@@ -15512,7 +15619,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
             'tr',
             { class: [r.fault ? 'fault' : '', r.crash ? 'crash' : '', r.error || r.deadlock ? 'err' : '', r.same ? 'same' : ''].join(' ') },
             h('td', { class: 'n' }, i + 1),
-            h('td', { class: 'who' }, r.who),
+            h('td', { class: 'who' }, h('span', { class: `whob c${colorOf(r.who)}` }, r.who)),
             h('td', null, r.text, !o.timing && r.chg && r.chg.length ? stateList(r.chg) : null),
             o.timing ? [h('td', { class: 'num' }, `${r.ms || 0}ms`), h('td', { class: 'num' }, r.conn ? '쥠' : '')] : null,
           );
@@ -15533,13 +15640,13 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
   }
   window.addEventListener('hashchange', render);
 
-  function header(title, back) {
+  function header(title, back, wide) {
     return h(
       'header',
       { class: 'top' },
       h(
         'div',
-        { class: 'wrap' },
+        { class: `wrap ${wide ? 'wide' : ''}` },
         back ? h('button', { class: 'iconbtn', onclick: () => go('#/') }, '←') : null,
         h('h1', { onclick: () => go('#/') }, title),
         h('span', { class: 'sp' }),
@@ -15633,7 +15740,9 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         h('p', { class: 'muted small' }, '문제 → 고민(힌트 잠금) → 힌트 → 해설. 숙달 지표는 실패 유형별 첫 제출 통과율이다.'),
       ),
     );
-    wrap.appendChild(h('h2', null, `문제 ${PROBLEMS.length}개`));
+    const allLv = PROBLEMS.reduce((n, P) => n + P.levels.length, 0);
+    const doneLv = PROBLEMS.reduce((n, P) => n + P.levels.filter((L, i) => ['solved', 'gaveup'].includes(levelState(P, L, i))).length, 0);
+    wrap.appendChild(h('div', { class: 'row h2row' }, h('h2', null, `문제 ${PROBLEMS.length}개`), h('span', { class: 'sp' }), h('span', { class: 'muted small' }, `단계 ${doneLv}/${allLv} 끝냄`)));
     let lastAxis = null;
     const groups = ['정합성', '트래픽', '데이터', '기타'];
     const sorted = PROBLEMS.slice().sort((a, b) => groups.indexOf(axisOf(a)) - groups.indexOf(axisOf(b)) || (a.order || 999) - (b.order || 999));
@@ -15645,36 +15754,15 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       const states = P.levels.map((L, i) => levelState(P, L, i));
       const firstOpen = P.levels.findIndex((L, i) => states[i] === 'open');
       const target = P.levels[firstOpen >= 0 ? firstOpen : 0].id;
+      const doneN = states.filter((x) => x === 'solved' || x === 'gaveup').length;
+      const status = doneN === 0 ? '시작 전' : doneN === P.levels.length ? '다 풂' : `${P.levels[firstOpen >= 0 ? firstOpen : 0].id} 차례`;
       wrap.appendChild(
         h(
-          'div',
-          { class: 'card pcard' },
-          h('div', { class: 'row' }, h('h3', null, P.title), h('span', { class: 'sp' }), h('span', { class: 'muted small' }, `${attempts(P.id).length}회차 풀이`)),
+          'button',
+          { class: 'card pcard', type: 'button', onclick: () => go(`#/p/${P.id}/${target}`) },
+          h('div', { class: 'prow' }, h('span', { class: 'ptitle' }, P.title), h('span', { class: 'dots', title: P.levels.map((L, i) => `${L.id} ${L.title}`).join('\n') }, states.map((x) => h('i', { class: `dot ${x}` }))), h('span', { class: `pstatus ${doneN === P.levels.length ? 'ok' : ''}` }, status)),
           P.types ? h('div', { class: 'ptypes' }, P.types.map((t) => h('span', { class: 'ptype' }, t))) : null,
-          h('p', { class: 'muted' }, P.summary),
-          h(
-            'div',
-            { class: 'steps' },
-            P.levels.map((L, i) => h('span', { class: `step ${states[i]}` }, `${L.id} ${L.title}`)),
-          ),
-          h(
-            'div',
-            { class: 'row' },
-            h('button', { class: 'btn primary', onclick: () => go(`#/p/${P.id}/${target}`) }, states.some((s) => s === 'solved' || s === 'gaveup') ? '이어 풀기' : '풀기'),
-            h(
-              'button',
-              {
-                class: 'btn ghost',
-                onclick: () => {
-                  if (!armed(`reset-${P.id}`, '한 번 더 누르면 새 회차를 시작한다. 이전 기록은 숙달 통계에 남는다.')) return;
-                  attempts(P.id).push({ startedAt: Date.now(), lv: {} });
-                  save();
-                  go(`#/p/${P.id}/L1`);
-                },
-              },
-              '처음부터 다시 풀기',
-            ),
-          ),
+          h('p', { class: 'psum' }, P.summary),
         ),
       );
     }
@@ -15769,8 +15857,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     const idx = Math.max(0, P.levels.findIndex((L) => L.id === lid));
     const L = P.levels[idx];
     const state = levelState(P, L, idx);
-    app.appendChild(header(P.title, true));
-    const wrap = h('main', { class: 'wrap' });
+    app.appendChild(header(P.title, true, L.kind !== 'choice'));
+    const wrap = h('main', { class: `wrap ${L.kind !== 'choice' ? 'wide' : ''}` });
     wrap.appendChild(
       h(
         'nav',
@@ -15791,6 +15879,27 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       ),
     );
 
+    wrap.appendChild(
+      h(
+        'div',
+        { class: 'row small attempt' },
+        h('span', { class: 'muted' }, `${attempts(P.id).length}회차 풀이`),
+        h(
+          'button',
+          {
+            class: 'btn sm ghost',
+            type: 'button',
+            onclick: () => {
+              if (!armed(`reset-${P.id}`, '한 번 더 누르면 새 회차를 시작한다. 이전 기록은 숙달 통계에 남는다.')) return;
+              attempts(P.id).push({ startedAt: Date.now(), lv: {} });
+              save();
+              go(`#/p/${P.id}/L1`);
+            },
+          },
+          '처음부터 다시 풀기',
+        ),
+      ),
+    );
     if (state === 'locked') {
       wrap.appendChild(h('div', { class: 'card' }, h('p', null, '앞 단계를 통과하거나 해설을 열면 열린다.')));
       app.appendChild(wrap);
@@ -15806,7 +15915,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
 
     const card = h('section', { class: 'card level' });
     card.appendChild(h('div', { class: 'interviewer' }, h('span', { class: 'who' }, '면접관'), h('span', null, `“${L.interviewer}”`)));
-    card.appendChild(h('div', { class: 'ask' }, L.ask.map((p) => h('p', null, p))));
+    card.appendChild(h('ul', { class: 'ask' }, L.ask.map((p) => h('li', null, p))));
     card.appendChild(
       h(
         'div',
@@ -15820,18 +15929,23 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         r.gaveUp && !r.solvedAt ? h('span', { class: 'pill bad' }, '해설 열람') : null,
       ),
     );
-    wrap.appendChild(card);
 
-    if (L.kind === 'flow') renderFlowLevel(P, L, r, card, wrap);
-    else if (L.kind === 'quant') renderQuantLevel(P, L, r, card, wrap);
+    // 흐름, 정량 단계는 넓은 화면에서 왼쪽(문제, 규칙)과 오른쪽(풀이)으로 나눈다.
+    const split = L.kind !== 'choice';
+    const workCard = h('section', { class: 'card work' });
+    if (L.kind === 'flow') renderFlowLevel(P, L, r, card, workCard);
+    else if (L.kind === 'quant') renderQuantLevel(P, L, r, card, workCard);
     else renderChoiceLevel(P, L, r, card, wrap);
-
-    renderHints(P, L, r, wrap);
-    renderAnswer(P, L, r, wrap);
-
+    const work = h('div', { class: 'lv-work' });
+    if (workCard.childNodes.length) work.appendChild(workCard);
+    renderHints(P, L, r, work);
+    renderAnswer(P, L, r, work);
     if ((r.solvedAt || r.gaveUp) && idx < P.levels.length - 1) {
-      wrap.appendChild(h('div', { class: 'row next' }, h('button', { class: 'btn primary', onclick: () => go(`#/p/${P.id}/${P.levels[idx + 1].id}`) }, `다음 꼬리질문: ${P.levels[idx + 1].id} ${P.levels[idx + 1].title} →`)));
+      work.appendChild(h('div', { class: 'row next' }, h('button', { class: 'btn primary', onclick: () => go(`#/p/${P.id}/${P.levels[idx + 1].id}`) }, `다음 꼬리질문: ${P.levels[idx + 1].id} ${P.levels[idx + 1].title} →`)));
     }
+    if (split) wrap.appendChild(h('div', { class: 'lv-grid' }, h('div', { class: 'lv-info' }, card), work));
+    else wrap.append(card, work);
+    if (split) app.appendChild(refBar(P, L));
     app.appendChild(wrap);
 
     const tick = () => {
@@ -15864,6 +15978,22 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
   }
 
   const lockLeft = (r) => (r.solvedAt ? 0 : r.openedAt + settings().lockMin * 60000 - Date.now());
+
+  // 좁은 화면에서 풀다가 규칙, 테스트를 다시 보는 아래 고정 바
+  function refBar(P, L) {
+    const items =
+      L.kind === 'flow'
+        ? [
+            ['규칙', () => openPanel('지켜야 할 규칙', rulesNode(L))],
+            ['테스트', () => openPanel(`테스트 ${L.tests.length}개`, testsNode(L))],
+            ['블록 설명', () => openPanel('블록이 하는 일', h('ul', { class: 'helplist' }, helpItems(P, L)))],
+          ]
+        : [
+            ['주어진 값', () => openPanel('주어진 값', h('table', { class: 'givens' }, h('tbody', null, L.givens.map(([k, v]) => h('tr', null, h('td', null, k), h('td', { class: 'num' }, v))))))],
+            ['계산 규칙', () => openPanel('계산 규칙', h('ul', { class: 'rules' }, L.rulesText.map((x) => h('li', null, x))))],
+          ];
+    return h('nav', { class: 'refbar', 'aria-label': '참고' }, items.map(([label, fn]) => h('button', { class: 'btn sm', type: 'button', onclick: fn }, label)));
+  }
 
   // ---------------------------------------------------------------- 흐름 단계
   const HELP = {
@@ -15912,28 +16042,42 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     return out;
   }
 
-  function renderFlowLevel(P, L, r, card, wrap) {
+  function rulesNode(L) {
+    return h('ul', { class: 'rules' }, L.rules.map((x) => h('li', null, x)));
+  }
+  function testsNode(L) {
+    if (hidden()) return h('p', { class: 'muted' }, `숨은 테스트 ${L.tests.length}개로 채점한다. 어떤 장애가 일어나는지는 직접 따져야 한다.`);
+    return h(
+      'div',
+      { class: 'tests' },
+      L.tests.map((t) => h('div', { class: 'test' }, h('div', { class: 'thd' }, h('span', { class: 'tid' }, t.id), h('b', null, t.name)), h('div', { class: 'tags' }, t.tags.map((g) => h('span', { class: 'tag' }, g))), h('div', { class: 'muted small' }, t.desc))),
+    );
+  }
+  function tagSummary(L) {
+    const n = {};
+    for (const t of L.tests) for (const g of t.tags) n[g] = (n[g] || 0) + 1;
+    return Object.keys(n).map((g) => `${g} ${n[g]}`).join(', ');
+  }
+
+  function renderFlowLevel(P, L, r, card, work) {
     card.appendChild(h('h3', { class: 'sub' }, '지켜야 할 규칙'));
-    card.appendChild(h('ul', { class: 'rules' }, L.rules.map((x) => h('li', null, x))));
-    if (!hidden()) {
-      card.appendChild(h('h3', { class: 'sub' }, `테스트 ${L.tests.length}개`));
-      card.appendChild(
-        h(
-          'div',
-          { class: 'tests' },
-          L.tests.map((t) => h('div', { class: 'test' }, h('span', { class: 'tid' }, t.id), h('b', null, t.name), t.tags.map((g) => h('span', { class: 'tag' }, g)), h('div', { class: 'muted small' }, t.desc))),
-        ),
-      );
-    } else {
-      card.appendChild(h('p', { class: 'muted' }, `숨은 테스트 ${L.tests.length}개로 채점한다. 어떤 장애가 일어나는지는 직접 따져야 한다.`));
-    }
-    card.appendChild(h('details', { class: 'help' }, h('summary', null, '블록이 하는 일'), h('ul', null, helpItems(P, L))));
+    card.appendChild(rulesNode(L));
+    card.appendChild(
+      h(
+        'details',
+        { class: 'fold', open: wideScreen() && !hidden() ? true : null },
+        h('summary', null, h('b', null, `테스트 ${L.tests.length}개`), hidden() ? null : h('span', { class: 'muted small' }, ` ${tagSummary(L)}`)),
+        testsNode(L),
+      ),
+    );
+    card.appendChild(h('details', { class: 'fold' }, h('summary', null, h('b', null, '블록이 하는 일')), h('ul', { class: 'helplist' }, helpItems(P, L))));
+    card = work;
 
     // 1. 말로 먼저 설계한다. 다 적어야 블록 편집기가 열린다(이 기능 전에 시작한 단계는 건너뛴다).
     const gate = !r.draftAt && !r.solvedAt && !r.gaveUp && !r.subs.length;
     const dbox = h('div', { class: 'draft' });
     if (gate) {
-      dbox.appendChild(h('h3', { class: 'sub' }, '1. 말로 먼저 설계하기'));
+      dbox.appendChild(h('h3', { class: 'sub first' }, '1. 말로 먼저 설계하기'));
       dbox.appendChild(h('p', { class: 'muted small' }, '면접에서 말하듯 3~5줄로 적는다. 무엇을 어떤 순서로 하고, 트랜잭션은 어디서 끊고, 장애가 나면 어떻게 되는지. 다 적으면 블록으로 옮겨 채점한다. 여기까지 걸린 시간이 설계 시간으로 남는다.'));
       const btn = h(
         'button',
@@ -15970,13 +16114,13 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       return;
     }
     if (r.draft) {
-      dbox.appendChild(h('h3', { class: 'sub' }, '1. 내가 말로 한 설계'));
+      dbox.appendChild(h('h3', { class: 'sub first' }, '1. 내가 말로 한 설계'));
       dbox.appendChild(h('div', { class: 'draft-text' }, r.draft));
       card.appendChild(dbox);
     }
 
     const onChange = () => save();
-    card.appendChild(h('h3', { class: 'sub' }, r.draft ? '2. 블록으로 옮겨 채점하기' : '블록으로 설계하기'));
+    card.appendChild(h('h3', { class: `sub ${r.draft ? '' : 'first'}` }, r.draft ? '2. 블록으로 옮겨 채점하기' : '블록으로 설계하기'));
     if (hidden()) card.appendChild(h('p', { class: 'muted small' }, '중급: 이 문제의 모든 단계 재료를 함께 보여 준다. 쓰지 않을 재료도 섞여 있다.'));
     for (const fs of L.flows) {
       card.appendChild(h('div', { class: 'flowname' }, fs.label));
@@ -16057,6 +16201,10 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     );
     const showCx = !hidden() || r.cx || r.solvedAt || r.gaveUp;
     let firstFail = true;
+    // 통과한 테스트는 한 줄로 모으고, 실패한 것만 펼친다.
+    const passes = [];
+    const passRow = h('div', { class: 'passes' });
+    box.appendChild(passRow);
     res.forEach((x, k) => {
       const t = L.tests.find((tt) => tt.id === x.id);
       if (!t) return;
@@ -16069,7 +16217,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
         !hidden() || r.solvedAt || r.gaveUp ? t.tags.map((g) => h('span', { class: 'tag' }, g)) : null,
       );
       if (x.pass) {
-        box.appendChild(h('div', { class: 'tres' }, head));
+        passes.push(h('span', { class: 'passchip' }, `✓ ${hidden() && !(r.solvedAt || r.gaveUp) ? `#${k + 1}` : t.id}`));
         return;
       }
       const body = [];
@@ -16083,6 +16231,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
       box.appendChild(h('details', { class: 'tres fail', open: firstFail ? true : null }, h('summary', null, head), body));
       firstFail = false;
     });
+    if (passes.length) passRow.append(h('span', { class: 'muted small' }, '통과'), ...passes);
+    else passRow.remove();
     return box;
   }
 
@@ -16101,7 +16251,7 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
   }
   const near = (x, want) => (want === 0 ? Math.abs(x) < 0.5 : Math.abs(x - want) / Math.abs(want) <= 0.1);
 
-  function renderQuantLevel(P, L, r, card) {
+  function renderQuantLevel(P, L, r, card, work) {
     const m = metrics(P, L);
     card.appendChild(h('h3', { class: 'sub' }, m.base.mine ? `기준 설계: 내가 ${m.base.from.id}에서 통과시킨 흐름` : `기준 설계: ${m.base.from.id} 모범 답 (${m.base.from.id}를 통과하지 않아서)`));
     const shown = L.showFlows || m.base.from.flows.filter((f) => f.kind !== 'bg').map((f) => f.id);
@@ -16115,6 +16265,8 @@ table.stats th{font-size:12px;color:var(--muted);font-weight:600}
     card.appendChild(h('h3', { class: 'sub' }, '계산 규칙'));
     card.appendChild(h('ul', { class: 'rules' }, L.rulesText.map((x) => h('li', null, x))));
 
+    card = work;
+    card.appendChild(h('h3', { class: 'sub first' }, '문항'));
     const last = r.subs.length ? r.subs[r.subs.length - 1].res : null;
     const done = r.solvedAt || r.gaveUp;
     const qs = h('div', { class: 'qs' });
